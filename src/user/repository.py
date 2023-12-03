@@ -1,7 +1,7 @@
-from src.data.repository import AbstractRepository
-from src.data.sql import SQLManager
-from src.utils.logging import get_logger
-from src.user.model import User
+from src.db.repository import AbstractRepository
+from src.db.sql import SQLManager
+from src.utils.logger import conf_logger as logger
+from src.db.models import User
 from src.auth.domain import Signup
 
 
@@ -11,7 +11,7 @@ class UserRepository(AbstractRepository):
     def __init__(self, db_manager: SQLManager) -> None:
         super().__init__()
         self.db = db_manager
-        self.logger = get_logger("UserRepository")
+        self.logger = logger("UserRepository")
 
     def __new__(cls, *args, **kwargs):
         """Singleton pattern"""

@@ -1,10 +1,4 @@
-from enum import Enum
-from pydantic import BaseModel, Field, ConfigDict
-
-
-class UserRole(str, Enum):
-    admin = "admin"
-    student = "student"
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class UserDto(BaseModel):
@@ -14,4 +8,3 @@ class UserDto(BaseModel):
     email: str = Field(..., min_length=1, max_length=50)
     first_name: str = Field(..., min_length=1, max_length=50)
     last_name: str = Field(..., min_length=1, max_length=50)
-    internal_role: UserRole = Field(..., min_length=1, max_length=50)

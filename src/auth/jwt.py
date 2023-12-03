@@ -1,10 +1,12 @@
-from datetime import timedelta, datetime
+from datetime import datetime, timedelta
+
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 from passlib.context import CryptContext
-from .exceptions import CredentialException
-from src.utils.settings import settings
 
+from config.settings import settings
+
+from .exceptions import CredentialException
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="access_token")
 
@@ -29,25 +31,22 @@ def create_access_jwt(user_id: int, expires_delta: timedelta | None = None) -> s
         expire = datetime.utcnow() + timedelta(
             minutes=settings.access_token_expire_minutes
         )
-    to_encode["exp"] = expire
-    encoded_jwt = jwt.encode(
-        to_encode, settings.secret_key, algorithm=settings.algorithm
-    )
+    to_encode["exp"] = str(expire)
+    encoded_jwt = jwt.encode(to_encode, settings.secret_key)
     return encoded_jwt
 
 
 def decode_jwt(token: str | None = None) -> int:
     if token is None:
-        return CredentialException
+        raise CredentialException
     try:
-        payload = jwt.decode(
-            str(token), settings.secret_key, algorithms=[settings.algorithm]
-        )
-        user_id: str = payload.get("sub")
-        expire_time: str = payload.get("exp")
+        payload = jwt.decode(str(token), settings.secret_key)
+        user_id = payload.get("sub")
+        expire_time = payload.get("exp")
 
         if user_id is None:
             raise CredentialException
         return int(user_id)
     except JWTError:
         raise CredentialException
+

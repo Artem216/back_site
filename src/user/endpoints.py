@@ -1,5 +1,5 @@
-from fastapi import APIRouter, Depends, HTTPException, status
-from src.data.dependencies import get_current_user
+from fastapi import APIRouter, Depends, status
+from src.db.dependencies import get_current_user
 from src.user.domain import UserDto
 
 

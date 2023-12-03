@@ -1,3 +1,4 @@
+
 from pydantic import Field
 from pydantic_settings import BaseSettings
 
@@ -17,6 +18,8 @@ class Settings(BaseSettings):
 
     secret_key: str = Field(..., alias="SECRET_KEY")
     algorithm: str = Field("HS256", alias="ALGORITHM")
+    log_file:str = Field(..., env="LOG_FILE")
 
 
-settings = Settings(_env_file=".env")
+settings = Settings(_env_file="./config/.env")
+
