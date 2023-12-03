@@ -1,4 +1,4 @@
-FROM python:3.11.2-buster
+FROM python:3.12-bookworm
 
 # Select working directory
 WORKDIR /code

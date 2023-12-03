@@ -1,13 +1,14 @@
 from fastapi import APIRouter, HTTPException, Depends, status
 from src.auth.domain import Signup, Login, AccessToken
-from src.data.dependencies import get_user_repository
+from src.db.dependencies import get_user_repository
 from src.user.repository import UserRepository
-from src.utils.logging import get_logger
+from src.utils.logger import conf_logger as logger
 from .jwt import create_access_jwt, get_password_hash, verify_password
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
-log = get_logger(__name__)
+
+logger = logger(__name__, log_level = "D")
 
 
 @router.post("/signup", response_model=AccessToken, status_code=status.HTTP_201_CREATED)
@@ -20,7 +21,7 @@ async def signup(
         user = repository.add(signup_data)
         return AccessToken(access_token=create_access_jwt(user.id))
     except Exception as e:
-        log.debug(str(e))
+        logger.debug(str(e))
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 
@@ -43,5 +44,5 @@ async def login(
             )
         return AccessToken(access_token=create_access_jwt(user.id))
     except Exception as e:
-        log.debug(str(e))
+        logger.debug(str(e))
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))

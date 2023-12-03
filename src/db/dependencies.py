@@ -1,25 +1,18 @@
 from fastapi import Depends, HTTPException, status
 from src.auth.jwt import decode_jwt, oauth2_scheme
-from src.data.sql import SQLManager
+from src.db.sql import SQLManager
 from src.user.domain import UserDto
 from src.user.repository import UserRepository
-from src.hackathon.repository import HackathonRepository
-from src.utils.logging import get_logger
+from src.utils.logger import conf_logger as logger
 
 
 async def get_db() -> SQLManager:
     """Get the database connection"""
-    return SQLManager(get_logger("db"))
+    return SQLManager(logger("db", log_level="E"))
 
 
 async def get_user_repository(db: SQLManager = Depends(get_db)) -> UserRepository:
     return UserRepository(db)
-
-
-async def get_hackathon_repository(
-    db: SQLManager = Depends(get_db),
-) -> HackathonRepository:
-    return HackathonRepository(db)
 
 
 async def get_current_user(

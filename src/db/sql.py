@@ -1,23 +1,33 @@
-from time import sleep
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy import create_engine
-from sqlalchemy.exc import OperationalError as sqlalchemyOpError
-from psycopg2 import OperationalError as psycopg2OpError
 from logging import Logger
-from . import Base
-from src.utils.settings import settings
-from src.utils.logging import get_logger
+from time import sleep
+
+from psycopg2 import OperationalError as psycopg2OpError
+from sqlalchemy import URL, create_engine
+from sqlalchemy.exc import OperationalError as sqlalchemyOpError
+from sqlalchemy.orm import sessionmaker
+
+from config.settings import settings
+from src.db.models import Base
+from src.utils.logger import conf_logger as logger
 
 
 class SQLManager:
     instance = None
 
-    def __init__(self, log: Logger = get_logger("__sql_manager__")):
-        self.pg_user = settings.postgres_user
-        self.pg_pass = settings.postgres_password
-        self.pg_host = settings.postgres_host
-        self.pg_port = settings.postgres_port_number
-        self.pg_db = settings.postgres_db
+    def __init__(self, log: Logger = logger("__sql_manager__")):
+        self.engine_url = URL.create(
+            "postgresql+psycopg2",
+            username=settings.postgres_user,
+            password=settings.postgres_password,
+            host=settings.postgres_host,
+            port=settings.postgres_port_number,
+            database=settings.postgres_db,
+        )
+        # self.pg_user = settings.postgres_user
+        # self.pg_pass = settings.postgres_password
+        # self.pg_host = settings.postgres_host
+        # self.pg_port = settings.postgres_port_number
+        # self.pg_db = settings.postgres_db
         self.log = log
         connected = False
         while not connected:
@@ -43,8 +53,7 @@ class SQLManager:
     def _connect(self) -> None:
         """Connect to the postgresql database"""
         self.engine = create_engine(
-            f"postgresql+psycopg2://{self.pg_user}:{self.pg_pass}@{self.pg_host}:{self.pg_port}\
-/{self.pg_db}",
+            self.engine_url,
             pool_pre_ping=True,
         )
         Base.metadata.bind = self.engine
@@ -59,3 +68,4 @@ class SQLManager:
         """Create the database structure if it doesn't exist (update)"""
         # Create the tables if they don't exist
         Base.metadata.create_all(self.engine)
+
