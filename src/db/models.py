@@ -19,7 +19,7 @@ class DealType(enum.Enum):
 association_user_instrument = Table(
     "associated_user_instruments",
     Base.metadata,
-    Column("user_id", ForeignKey("users.user_id"), primary_key=True),
+    Column("id", ForeignKey("users.id"), primary_key=True),
     Column("code", ForeignKey("instruments.code"), primary_key=True),
 )
 
@@ -27,9 +27,9 @@ association_user_instrument = Table(
 class User(Base):
     __tablename__ = "users"
 
-    user_id: Mapped[str] = mapped_column(UUID, primary_key=True, default=uuid.uuid4)
-    first_name: Mapped[str] = mapped_column(String(30))
-    last_name: Mapped[str] = mapped_column(String(30))
+    id: Mapped[str] = mapped_column(UUID, primary_key=True, default=uuid.uuid4)
+    first_name: Mapped[str] = mapped_column(String(50))
+    last_name: Mapped[str] = mapped_column(String(50))
     email: Mapped[str] = mapped_column(String(100), unique=True)
     password: Mapped[str] = mapped_column(String)
     deals: Mapped[list[Deal]] = relationship(
@@ -64,12 +64,13 @@ class Deal(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     price: Mapped[Decimal]
+    quantity: Mapped[int]
     deal_type: Mapped[DealType] = mapped_column(Enum(DealType))
     datetime: Mapped[DateTime] = mapped_column(
         DateTime,
         server_default=func.now(),
     )
-    user_id: Mapped[str] = mapped_column(ForeignKey("users.user_id"))
+    user_id: Mapped[str] = mapped_column(ForeignKey("users.id"))
     user: Mapped[User] = relationship(back_populates="deals")
     instrument_code: Mapped[str] = mapped_column(ForeignKey("instruments.code"))
     instrument: Mapped[Instrument] = relationship(back_populates="deals")
