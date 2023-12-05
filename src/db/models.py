@@ -4,9 +4,10 @@ import enum
 import uuid
 from decimal import Decimal
 
-from sqlalchemy import UUID, Column, DateTime, Enum, ForeignKey, Integer, String, Table
+from sqlalchemy import UUID, Boolean, Column, DateTime, Enum, ForeignKey, Integer, String, Table
 from sqlalchemy.orm import Mapped, declarative_base, mapped_column, relationship
 from sqlalchemy.sql import func
+from sqlalchemy.sql import expression
 
 Base = declarative_base()
 
@@ -27,7 +28,7 @@ association_user_instrument = Table(
 class User(Base):
     __tablename__ = "users"
 
-    id: Mapped[str] = mapped_column(UUID, primary_key=True, default=uuid.uuid4)
+    id: Mapped[uuid.UUID] = mapped_column(UUID, primary_key=True, default=uuid.uuid4)
     first_name: Mapped[str] = mapped_column(String(50))
     last_name: Mapped[str] = mapped_column(String(50))
     email: Mapped[str] = mapped_column(String(100), unique=True)
@@ -46,6 +47,8 @@ class Instrument(Base):
 
     code: Mapped[str] = mapped_column(String(30), primary_key=True)
     title: Mapped[str] = mapped_column(String)
+    group: Mapped[str] = mapped_column(String(30))
+    has_model: Mapped[bool] = mapped_column(Boolean, server_default=expression.false())
     deals: Mapped[list[Deal]] = relationship(
         back_populates="instrument",
         cascade="all, delete",

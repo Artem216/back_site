@@ -23,16 +23,12 @@ class SQLManager:
             port=settings.postgres_port_number,
             database=settings.postgres_db,
         )
-        # self.pg_user = settings.postgres_user
-        # self.pg_pass = settings.postgres_password
-        # self.pg_host = settings.postgres_host
-        # self.pg_port = settings.postgres_port_number
-        # self.pg_db = settings.postgres_db
         self.log = log
         connected = False
         while not connected:
             try:
                 self._connect()
+                self.log.debug("Database connected")
             except (sqlalchemyOpError, psycopg2OpError):
                 self.log.warning("Database connection failed, retrying...")
                 sleep(2)
@@ -57,7 +53,7 @@ class SQLManager:
             pool_pre_ping=True,
         )
         Base.metadata.bind = self.engine
-        db_session = sessionmaker(bind=self.engine)
+        db_session = sessionmaker(autocommit=False, autoflush=False, bind=self.engine)
         self.session = db_session()
 
     def _close(self) -> None:

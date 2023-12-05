@@ -1,18 +1,28 @@
 from fastapi import Depends, HTTPException, status
+
 from src.auth.jwt import decode_jwt, oauth2_scheme
 from src.db.sql import SQLManager
+from src.trader.repository import InstrumentRepository
 from src.user.domain import UserDto
 from src.user.repository import UserRepository
-from src.utils.logger import conf_logger as logger
+from src.utils.logger import conf_logger
+
+logger = conf_logger(__name__)
 
 
 async def get_db() -> SQLManager:
     """Get the database connection"""
-    return SQLManager(logger("db", log_level="E"))
+    return SQLManager(conf_logger("db"))
 
 
 async def get_user_repository(db: SQLManager = Depends(get_db)) -> UserRepository:
     return UserRepository(db)
+
+
+async def get_instrument_repository(
+    db: SQLManager = Depends(get_db),
+) -> InstrumentRepository:
+    return InstrumentRepository(db)
 
 
 async def get_current_user(
@@ -26,3 +36,4 @@ async def get_current_user(
         )
     user_id = decode_jwt(access_token)
     return UserDto.model_validate(user_repository.get(user_id=user_id))
+
