@@ -1,16 +1,16 @@
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, EmailStr, Field, ConfigDict
 
 
 class AuthBase(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
-    email: str = Field(..., example="test@test.com", min_length=5, max_length=50)
-    password: str = Field(..., example="test123456", min_length=8, max_length=256)
+    email: EmailStr
+    password: str = Field(..., min_length=3, max_length=256) # TODO change min pass length
 
 
 class Signup(AuthBase):
-    first_name: str = Field(..., example="Роберт", min_length=2, max_length=30)
-    last_name: str = Field(..., example="Ласурия", min_length=2, max_length=30)
+    first_name: str = Field(..., min_length=2, max_length=30)
+    last_name: str = Field(..., min_length=2, max_length=30)
 
 
 class Login(AuthBase):

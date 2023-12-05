@@ -1,14 +1,16 @@
-from fastapi import APIRouter, HTTPException, Depends, status
-from src.auth.domain import Signup, Login, AccessToken
+from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordRequestForm
+from src.auth.domain import AccessToken, Signup
 from src.db.dependencies import get_user_repository
 from src.user.repository import UserRepository
 from src.utils.logger import conf_logger as logger
+
 from .jwt import create_access_jwt, get_password_hash, verify_password
 
-router = APIRouter(prefix="/auth", tags=["auth"])
+router = APIRouter(prefix="", tags=["auth"])
 
 
-logger = logger(__name__, log_level = "D")
+logger = logger(__name__)
 
 
 @router.post("/signup", response_model=AccessToken, status_code=status.HTTP_201_CREATED)
@@ -27,22 +29,22 @@ async def signup(
 
 @router.post("/login", response_model=AccessToken, status_code=status.HTTP_200_OK)
 async def login(
-    login_data: Login,
+    login_data: OAuth2PasswordRequestForm = Depends(),
     repository: UserRepository = Depends(get_user_repository),
 ) -> AccessToken:
-    try:
-        user = repository.get(email=login_data.email)
-        if not user:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="User with this email does not exist",
-            )
-        if not verify_password(login_data.password, user.password):
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Incorrect password",
-            )
-        return AccessToken(access_token=create_access_jwt(user.id))
-    except Exception as e:
-        logger.debug(str(e))
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    logger.debug("logging attempt %s", login_data.username)
+    user = repository.get(email=login_data.username)
+    if not user:
+        logger.debug("User with this email does not exist")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User with this email does not exist",
+        )
+    if not verify_password(login_data.password, user.password):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect password",
+        )
+    access_token = create_access_jwt(user.id)
+    return AccessToken(access_token=access_token)
+
