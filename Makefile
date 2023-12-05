@@ -1,6 +1,6 @@
 debug:
-	docker compose -f docker/docker-compose.yaml up db --build -d
-	python3 main.py
+	docker compose up db --build -d
+	python main.py
 
 deploy:
-	docker compose -f docker/docker-compose.yaml up --build -d
+	docker compose up --build -d
