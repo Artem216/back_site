@@ -5,8 +5,8 @@ from src.auth.endpoints import router as auth_router
 
 def create_app():
     _app = FastAPI(
-        name="Itam Hacks",
-        description="Itam Hacks API",
+        name="Go Algo",
+        description="Hackathon API",
     )
     _app.include_router(api_router)
     _app.include_router(auth_router)
