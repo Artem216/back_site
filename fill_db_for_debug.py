@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session
 from src.db.models import Instrument
 from config.settings import settings
+from src.db.models import Base
 
 from sqlalchemy import URL, create_engine
 
@@ -15,6 +16,8 @@ engine_url = URL.create(
 )
 
 engine = create_engine(engine_url)
+
+Base.metadata.create_all(engine)
 
 instruments = (
         Instrument(code="AIG-RM", title="American International ORD SHS", group="stock_shares"),
