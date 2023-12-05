@@ -1,7 +1,6 @@
 from typing import Sequence
 import uuid
 from sqlalchemy import select
-from src.auth.domain import Signup
 from src.db.models import Instrument, User
 from src.db.repository import AbstractRepository
 from src.db.sql import SQLManager
@@ -37,8 +36,8 @@ class InstrumentRepository(AbstractRepository):
 
         return instrument
 
-    def get(self, code: str) -> Instrument | None:
-        return self.db.session.get(Instrument, code)
+    def get(self, instrument: schemas.InstrumentBase) -> Instrument | None:
+        return self.db.session.get(Instrument, instrument.code)
 
     def update(self, user: User):
         self.db.session.add(user)
@@ -52,6 +51,17 @@ class InstrumentRepository(AbstractRepository):
 
     def get_all(self) -> list[Instrument]:
         return list(self.db.session.scalars(select(Instrument)).all())
+
+    def add_user_instrument(self, user_id: uuid.UUID, instrument_data: schemas.InstrumentBase) -> schemas.Instrument:
+        instrument = self.get(instrument_data)
+        if not instrument:
+            instrument = Instrument(**instrument_data.model_dump())
+        stmt = select(User).where(User.id == user_id)
+        user = self.db.session.scalars(stmt).one()
+        user.instruments.append(instrument)
+        self.db.session.merge(user)
+        self.db.session.commit()
+        return instrument
 
     def get_user_instruments(self, user_id: uuid.UUID) -> list:
         stmt = select(User).where(User.id == user_id)

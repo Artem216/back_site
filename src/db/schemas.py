@@ -17,12 +17,11 @@ class DealType(enum.Enum):
 
 class InstrumentBase(BaseModel):
     code: str = Field(..., min_length=1, max_length=50)
-    title: str = Field(..., min_length=1, max_length=256)
-    group: str = Field(..., min_length=1, max_length=50)
 
 
 class InstrumentCreate(InstrumentBase):
-    pass
+    title: str = Field(..., min_length=1, max_length=256)
+    group: str = Field(..., min_length=1, max_length=50)
 
 
 class Instrument(InstrumentBase):
