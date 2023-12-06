@@ -64,3 +64,4 @@ class User(UserSignup):
     id: uuid.UUID
     deals: list[Deal]
     instruments: list[Instrument]
+

@@ -73,7 +73,7 @@ class Deal(Base):
         DateTime,
         server_default=func.now(),
     )
-    user_id: Mapped[str] = mapped_column(ForeignKey("users.id"))
+    user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"))
     user: Mapped[User] = relationship(back_populates="deals")
     instrument_code: Mapped[str] = mapped_column(ForeignKey("instruments.code"))
     instrument: Mapped[Instrument] = relationship(back_populates="deals")
