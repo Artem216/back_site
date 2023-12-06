@@ -3,7 +3,6 @@ __pycache__
 docker/docker
 db_data
 config/.env
-*.sql
 venv
 .venv
 *.log

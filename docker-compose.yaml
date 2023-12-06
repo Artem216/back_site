@@ -21,3 +21,13 @@ services:
         - ./db_data/data:/var/lib/postgresql/data
     ports:
         - "5432:5432"
+  test_db:
+    image: postgres:15
+    env_file:
+        - ./config/.env
+    restart: always
+    volumes:
+        - ./db_data/data:/var/lib/postgresql/data
+        - ./create_tables.sql:/docker-entrypoint-initdb.d/create_tables.sql
+    ports:
+        - "5432:5432"
