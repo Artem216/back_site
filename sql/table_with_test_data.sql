@@ -158,6 +158,7 @@ COPY public.deals (id, price, quantity, deal_type, user_id, instrument_code, dat
 4	5.0	1	sell	332097ee-807e-4958-b053-1bbf8c35e846	AMEZ	2023-12-07 10:53:07.49872
 5	1000.0	13	buy	332097ee-807e-4958-b053-1bbf8c35e846	MAGEP	2023-12-07 10:53:07.49872
 6	1080.0	13	sell	332097ee-807e-4958-b053-1bbf8c35e846	MAGEP	2023-12-07 10:53:07.49872
+7	343	22	buy	7f6d7fbe-e165-4681-86ca-7e75e2644b95	A-RM	2023-12-07 19:38:12.901859
 \.
 
 
@@ -188,7 +189,7 @@ COPY public.users (id, first_name, last_name, email, password) FROM stdin;
 -- Name: deals_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgress
 --
 
-SELECT pg_catalog.setval('public.deals_id_seq', 6, true);
+SELECT pg_catalog.setval('public.deals_id_seq', 7, true);
 
 
 --
