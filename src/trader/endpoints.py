@@ -10,13 +10,16 @@ from src.db.models import Deal
 from src.trader.repository import DealDAL, InstrumentDAL
 from src.user.domain import UserDto
 from src.user.repository import UserRepository
+from src.utils.logger import conf_logger
+
+logger = conf_logger(__name__, "D")
 
 router = APIRouter(prefix="/trader", tags=["trader"])
 
 
 @router.post(
     "/add_user_instrument",
-    response_model=schemas.InstrumentCreate,
+    response_model=schemas.Instrument,
     status_code=status.HTTP_200_OK,
 )
 async def add_instrument_to_user(
@@ -32,11 +35,10 @@ async def add_instrument_to_user(
 
 @router.get(
     "/instrument_all",
-    response_model=list[schemas.InstrumentCreate],
+    response_model=list[schemas.Instrument],
     status_code=status.HTTP_200_OK,
 )
 async def get_all_instruments(
-    # current_user: UserDto = Depends(get_current_user),
     instrument_repository: InstrumentDAL = Depends(get_instrument_dal),
 ) -> list[schemas.Instrument]:
     return instrument_repository.get_all()
@@ -44,7 +46,7 @@ async def get_all_instruments(
 
 @router.get(
     "/user_instruments",
-    response_model=list[schemas.InstrumentCreate],
+    response_model=list[schemas.Instrument],
     status_code=status.HTTP_200_OK,
 )
 async def get_user_instruments(
@@ -63,6 +65,6 @@ async def get_user_deals_by_instrument(
     deal_request: schemas.UserDealsRequest,
     current_user: UserDto = Depends(get_current_user),
     deal_dal: DealDAL = Depends(get_deal_dal),
-) -> list[schemas.DealBase]:
+) -> list[schemas.Deal]:
     return deal_dal.get_user_deals_by_instrument(current_user.id, deal_request)
 

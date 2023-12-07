@@ -1,7 +1,7 @@
 import uuid
 from typing import Sequence
 
-from sqlalchemy import and_, select
+from sqlalchemy import and_, distinct, select
 from src.db import schemas
 from src.db.models import Deal, DealType, Instrument, User
 from src.db.repository import AbstractRepository
@@ -27,7 +27,7 @@ class InstrumentDAL:
 
     def add(
         self,
-        instrument_data: schemas.InstrumentCreate,
+        instrument_data: schemas.Instrument,
     ) -> Instrument:
         instrument = Instrument(code=instrument_data.code, title=instrument_data.title)
         self.db.session.add(instrument)
@@ -48,8 +48,13 @@ class InstrumentDAL:
             self.db.session.delete(instrument)
             self.db.session.commit()
 
-    def get_all(self) -> list[Instrument]:
-        return list(self.db.session.scalars(select(Instrument)).all())
+    def get_all(self) -> list[schemas.Instrument]:
+        instruments = self.db.session.scalars(select(Instrument)).all()
+        return [schemas.Instrument(
+            code=instrument.code,
+            title=instrument.title,
+            group=instrument.group,
+            ) for instrument in instruments]
 
     def add_user_instrument(
         self, user_id: uuid.UUID, instrument_data: schemas.InstrumentBase
@@ -64,9 +69,14 @@ class InstrumentDAL:
         self.db.session.commit()
         return instrument
 
-    def get_user_instruments(self, user_id: uuid.UUID) -> list:
-        stmt = select(User).where(User.id == user_id)
-        return self.db.session.scalars(stmt).one().instruments
+    def get_user_instruments(self, user_id: uuid.UUID) -> list[schemas.Instrument]:
+        stmt = select(Instrument).join(Instrument.deals).where(Deal.user_id == user_id).distinct()
+        instruments = self.db.session.scalars(stmt).all()
+        return [schemas.Instrument(
+                code=instrument.code,
+                title=instrument.title,
+                group=instrument.group,
+                ) for instrument in instruments]
 
 
 class DealDAL:
@@ -77,7 +87,7 @@ class DealDAL:
     def __init__(self, db_manager: SQLManager) -> None:
         super().__init__()
         self.db = db_manager
-        self.logger = logger("DealRepository", "D")
+        self.logger = logger("DealDAL")
 
     def __new__(cls, *args, **kwargs):
         """Singleton pattern"""
@@ -101,8 +111,8 @@ class DealDAL:
             return user.deals
 
     def get_user_deals_by_instrument(
-        self, user_id: str, deals_request: schemas.UserDealsRequest
-    ):  # -> list[schemas.Deal]:
+        self, user_id: uuid.UUID, deals_request: schemas.UserDealsRequest
+    )  -> list[schemas.Deal]:
         self.logger.debug(f"{deals_request=}")
         stmt = select(Deal).where(
             and_(
@@ -121,15 +131,5 @@ class DealDAL:
             datetime=deal.date_time,
         ) for deal in deals]
 
-        # return [schemas.DealBase.model_validate(deal) for deal in deals]
-        # return [schemas.Deal(
-        #     id=deal.id,
-        #     price=deal.price,
-        #     quantity=deal.quantity,
-        #     deal_type=deal.deal_type,
-        #     user=deal.user.id,
-        #     instrument=deal.instrument,
-        #     datetime=deal.datetime
-        #     ) for deal in deals]
 
 
