@@ -2,7 +2,7 @@ from fastapi import Depends, HTTPException, status
 
 from src.auth.jwt import decode_jwt, oauth2_scheme
 from src.db.sql import SQLManager
-from src.trader.repository import InstrumentRepository
+from src.trader.repository import DealDAL, InstrumentDAL
 from src.user.domain import UserDto
 from src.user.repository import UserRepository
 from src.utils.logger import conf_logger
@@ -19,11 +19,15 @@ async def get_user_repository(db: SQLManager = Depends(get_db)) -> UserRepositor
     return UserRepository(db)
 
 
-async def get_instrument_repository(
+async def get_instrument_dal(
     db: SQLManager = Depends(get_db),
-) -> InstrumentRepository:
-    return InstrumentRepository(db)
+) -> InstrumentDAL:
+    return InstrumentDAL(db)
 
+async def get_deal_dal(
+    db: SQLManager = Depends(get_db),
+) -> DealDAL:
+    return DealDAL(db)
 
 async def get_current_user(
     access_token: str | None = Depends(oauth2_scheme),

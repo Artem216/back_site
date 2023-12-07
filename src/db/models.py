@@ -2,12 +2,22 @@ from __future__ import annotations
 
 import enum
 import uuid
+from datetime import datetime
 from decimal import Decimal
 
-from sqlalchemy import UUID, Boolean, Column, DateTime, Enum, ForeignKey, Integer, String, Table
+from sqlalchemy import (
+    UUID,
+    Boolean,
+    Column,
+    DateTime,
+    Enum,
+    ForeignKey,
+    Integer,
+    String,
+    Table,
+)
 from sqlalchemy.orm import Mapped, declarative_base, mapped_column, relationship
-from sqlalchemy.sql import func
-from sqlalchemy.sql import expression
+from sqlalchemy.sql import expression, func
 
 Base = declarative_base()
 
@@ -69,7 +79,7 @@ class Deal(Base):
     price: Mapped[Decimal]
     quantity: Mapped[int]
     deal_type: Mapped[DealType] = mapped_column(Enum(DealType))
-    datetime: Mapped[DateTime] = mapped_column(
+    date_time: Mapped[datetime] = mapped_column(
         DateTime,
         server_default=func.now(),
     )
@@ -77,4 +87,7 @@ class Deal(Base):
     user: Mapped[User] = relationship(back_populates="deals")
     instrument_code: Mapped[str] = mapped_column(ForeignKey("instruments.code"))
     instrument: Mapped[Instrument] = relationship(back_populates="deals")
+
+    def __repr__(self) -> str:
+        return f"Deal(id={self.id}, price={self.price}, quantity={self.quantity}, deal_type={self.deal_type}, user_id={self.user_id}, instrument_code={self.instrument_code})"
 

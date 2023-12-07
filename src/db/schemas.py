@@ -6,13 +6,14 @@ from datetime import datetime
 from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
+from src.db.models import DealType
 
 
-class DealType(enum.Enum):
-    model_config = ConfigDict(from_attributes=True)
-
-    buy = "buy"
-    sell = "sell"
+# class DealType(enum.Enum):
+#     model_config = ConfigDict(from_attributes=True)
+#
+#     buy = "buy"
+#     sell = "sell"
 
 
 class InstrumentBase(BaseModel):
@@ -35,14 +36,28 @@ class DealBase(BaseModel):
     price: Decimal = Field(ge=0.01, decimal_places=2)
     quantity: int = Field(ge=1)
     deal_type: DealType
-    user: User
-    instrument: Instrument
+    user: uuid.UUID
+    instrument: str
 
 
 class Deal(DealBase):
     id: int
     datetime: datetime
+    ...
 
+
+class UserDealsRequest(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    instrument_code: str
+
+# class UserDealResponse(BaseModel):
+    # price: Decimal = Field(ge=0.01, decimal_places=2)
+    # quantity: int = Field(ge=1)
+    # deal_type: DealType
+    # user: str
+    # instrument: Instrument
+    # id: int
+    # datetime: datetime
 
 class UserBase(BaseModel):
     email: EmailStr
