@@ -54,7 +54,7 @@ async def get_user_instruments(
     return instrument_dal.get_user_instruments(current_user.id)
 
 
-@router.get(
+@router.post(
     "/user_deals_by_instrument",
     response_model=list[schemas.Deal],
     status_code=status.HTTP_200_OK,
