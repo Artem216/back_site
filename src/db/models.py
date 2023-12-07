@@ -5,17 +5,7 @@ import uuid
 from datetime import datetime
 from decimal import Decimal
 
-from sqlalchemy import (
-    UUID,
-    Boolean,
-    Column,
-    DateTime,
-    Enum,
-    ForeignKey,
-    Integer,
-    String,
-    Table,
-)
+from sqlalchemy import UUID, Boolean, DateTime, Enum, ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, declarative_base, mapped_column, relationship
 from sqlalchemy.sql import expression, func
 
@@ -25,14 +15,6 @@ Base = declarative_base()
 class DealType(enum.Enum):
     buy = "buy"
     sell = "sell"
-
-
-association_user_instrument = Table(
-    "associated_user_instruments",
-    Base.metadata,
-    Column("id", ForeignKey("users.id"), primary_key=True),
-    Column("code", ForeignKey("instruments.code"), primary_key=True),
-)
 
 
 class User(Base):
@@ -47,9 +29,6 @@ class User(Base):
         back_populates="user",
         cascade="all, delete",
     )
-    instruments: Mapped[list[Instrument]] = relationship(
-        secondary=association_user_instrument, back_populates="users"
-    )
 
 
 class Instrument(Base):
@@ -62,10 +41,6 @@ class Instrument(Base):
     deals: Mapped[list[Deal]] = relationship(
         back_populates="instrument",
         cascade="all, delete",
-    )
-
-    users: Mapped[list[User]] = relationship(
-        secondary=association_user_instrument, back_populates="instruments"
     )
 
     def __repr__(self) -> str:
