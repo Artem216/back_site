@@ -4,12 +4,9 @@ from src.db.dependencies import (
     get_current_user,
     get_deal_dal,
     get_instrument_dal,
-    get_user_repository,
 )
-from src.db.models import Deal
 from src.trader.repository import DealDAL, InstrumentDAL
 from src.user.domain import UserDto
-from src.user.repository import UserRepository
 from src.utils.logger import conf_logger
 
 logger = conf_logger(__name__, "D")
