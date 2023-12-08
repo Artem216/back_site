@@ -66,3 +66,10 @@ class Deal(Base):
     def __repr__(self) -> str:
         return f"Deal(id={self.id}, price={self.price}, quantity={self.quantity}, deal_type={self.deal_type}, user_id={self.user_id}, instrument_code={self.instrument_code})"
 
+class Bot(Base):
+    __tablename__ = "bots"
+
+    user_id: Mapped[uuid.UUID] = mapped_column(UUID, primary_key=True)
+    instrument_code: Mapped[str] = mapped_column(String(30), primary_key=True)
+    status: Mapped[bool] = mapped_column(Boolean, server_default=expression.false())
+

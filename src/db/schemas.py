@@ -6,7 +6,6 @@ from datetime import datetime
 from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
-
 from src.db.models import DealType
 
 
@@ -60,4 +59,11 @@ class User(UserSignup):
     id: uuid.UUID
     deals: list[Deal]
     instruments: list[Instrument]
+
+
+class Bot(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    instrument_code: str
+    status: bool
 
