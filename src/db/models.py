@@ -5,7 +5,7 @@ import uuid
 from datetime import datetime
 from decimal import Decimal
 
-from sqlalchemy import UUID, Boolean, DateTime, Enum, ForeignKey, Integer, String
+from sqlalchemy import DECIMAL, UUID, Boolean, DateTime, Enum, ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, declarative_base, mapped_column, relationship
 from sqlalchemy.sql import expression, func
 
@@ -72,4 +72,5 @@ class Bot(Base):
     user_id: Mapped[uuid.UUID] = mapped_column(UUID, primary_key=True)
     instrument_code: Mapped[str] = mapped_column(String(30), primary_key=True)
     status: Mapped[bool] = mapped_column(Boolean, server_default=expression.false())
+    balance: Mapped[Decimal] = mapped_column(DECIMAL, nullable=True, default = 0.00)
 

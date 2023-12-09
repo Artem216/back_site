@@ -1,10 +1,13 @@
 import uuid
+from decimal import Decimal
+from typing import Sequence
 
 from sqlalchemy import and_, select
+
 from src.db import schemas
-from src.db.models import Deal, Instrument, User
+from src.db.models import Bot, Deal, DealType, Instrument, User
 from src.db.sql import SQLManager
-from src.utils.logger import conf_logger as logger
+from src.utils.logger import conf_logger
 
 
 class InstrumentDAL:
@@ -15,7 +18,7 @@ class InstrumentDAL:
     def __init__(self, db_manager: SQLManager) -> None:
         super().__init__()
         self.db = db_manager
-        self.logger = logger("InsturmentDAL", "D")
+        self.logger = conf_logger("InsturmentDAL", "D")
 
     def __new__(cls, *args, **kwargs):
         """Singleton pattern"""
@@ -46,46 +49,38 @@ class InstrumentDAL:
             self.db.session.delete(instrument)
             self.db.session.commit()
 
-    def get_all(self) -> list[schemas.Instrument]:
-        instruments = self.db.session.scalars(select(Instrument)).all()
-        return [
-            schemas.Instrument(
-                code=instrument.code,
-                title=instrument.title,
-                group=instrument.group,
-            )
-            for instrument in instruments
-        ]
+    def get_all(self) -> Sequence[Instrument]:
+        return self.db.session.scalars(select(Instrument)).all()
 
-    def add_user_instrument(
-        self, user_id: uuid.UUID, instrument_data: schemas.InstrumentBase
-    ) -> schemas.Instrument:
-        instrument = self.get(instrument_data)
-        if not instrument:
-            instrument = Instrument(**instrument_data.model_dump())
-        stmt = select(User).where(User.id == user_id)
-        user = self.db.session.scalars(stmt).one()
-        user.instruments.append(instrument)
-        self.db.session.merge(user)
-        self.db.session.commit()
-        return instrument
+    # def add_user_instrument(
+    #     self, user_id: uuid.UUID, instrument_data: schemas.InstrumentBase
+    # ) -> schemas.Instrument:
+    #     instrument = self.get(instrument_data)
+    #     if not instrument:
+    #         instrument = Instrument(**instrument_data.model_dump())
+    #     stmt = select(User).where(User.id == user_id)
+    #     user = self.db.session.scalars(stmt).one()
+    #     user.instruments.append(instrument)
+    #     self.db.session.merge(user)
+    #     self.db.session.commit()
+    #     return instrument
 
-    def get_user_instruments(self, user_id: uuid.UUID) -> list[schemas.Instrument]:
-        stmt = (
-            select(Instrument)
-            .join(Instrument.deals)
-            .where(Deal.user_id == user_id)
-            .distinct()
-        )
-        instruments = self.db.session.scalars(stmt).all()
-        return [
-            schemas.Instrument(
-                code=instrument.code,
-                title=instrument.title,
-                group=instrument.group,
-            )
-            for instrument in instruments
-        ]
+    # def get_user_instruments(self, user_id: uuid.UUID) -> list[schemas.Instrument]:
+    #     stmt = (
+    #         select(Instrument)
+    #         .join(Instrument.deals)
+    #         .where(Deal.user_id == user_id)
+    #         .distinct()
+    #     )
+    #     instruments = self.db.session.scalars(stmt).all()
+    #     return [
+    #         schemas.Instrument(
+    #             code=instrument.code,
+    #             title=instrument.title,
+    #             group=instrument.group,
+    #         )
+    #         for instrument in instruments
+    #     ]
 
 
 class DealDAL:
@@ -96,7 +91,7 @@ class DealDAL:
     def __init__(self, db_manager: SQLManager) -> None:
         super().__init__()
         self.db = db_manager
-        self.logger = logger("DealDAL")
+        self.logger = conf_logger("DealDAL")
 
     def __new__(cls, *args, **kwargs):
         """Singleton pattern"""
@@ -106,9 +101,19 @@ class DealDAL:
 
     def add(
         self,
-        deal_data: schemas.DealBase,
+        instrument_code: str,
+        price: Decimal,
+        quantity: int,
+        deal_type: DealType,
+        user_id: uuid.UUID,
     ) -> Deal:
-        deal = Instrument(**deal_data.model_dump())
+        deal = Deal(
+            instrument_code=instrument_code,
+            price=price,
+            quantity=quantity,
+            deal_type=deal_type,
+            user_id=user_id,
+        )
         self.db.session.add(deal)
         self.db.session.commit()
 
@@ -121,24 +126,71 @@ class DealDAL:
 
     def get_user_deals_by_instrument(
         self, user_id: uuid.UUID, deals_request: schemas.UserDealsRequest
-    ) -> list[schemas.Deal]:
+    ) -> Sequence[Deal]:
         stmt = select(Deal).where(
             and_(
                 Deal.instrument_code == deals_request.instrument_code,
                 Deal.user_id == user_id,
             )
         )
-        deals = list(self.db.session.scalars(stmt).all())
-        return [
-            schemas.Deal(
-                id=deal.id,
-                price=deal.price,
-                quantity=deal.quantity,
-                deal_type=deal.deal_type,
-                user=deal.user.id,
-                instrument=deal.instrument_code,
-                datetime=deal.date_time,
-            )
-            for deal in deals
-        ]
+        return self.db.session.scalars(stmt).all()
+
+class BotDAL:
+    """Data access layer for bots"""
+
+    instance = None
+
+    def __init__(self, db_manager: SQLManager) -> None:
+        super().__init__()
+        self.db = db_manager
+        self.logger = conf_logger("BotDAL", "D")
+
+    def __new__(cls, *args, **kwargs):
+        """Singleton pattern"""
+        if cls.instance is None:
+            cls.instance = super(BotDAL, cls).__new__(cls)
+        return cls.instance
+
+    def add(
+        self,
+        user_id: uuid.UUID,
+        code: schemas.InstrumentBase,
+    ) -> Bot:
+        bot = Bot(user_id=user_id, instrument_code=code.code)
+        self.db.session.add(bot)
+        # TODO: check is bot exist
+        self.db.session.commit()
+
+        return bot
+
+    def get(
+        self,
+        user_id: uuid.UUID,
+        code: schemas.InstrumentBase,
+    ) -> Bot | None:
+        bot = self.db.session.get(Bot, (user_id, code.code))
+        if bot:
+            return bot
+
+    def get_bot_status(
+        self, user_id: uuid.UUID, instrument: schemas.InstrumentBase
+    ) -> schemas.Bot | None:
+        bot = self.db.session.get(Bot, (user_id, instrument.code))
+        if bot:
+            return bot
+
+    def bot_toggle_status(
+        self, user_id: uuid.UUID, instrument: schemas.InstrumentBase
+    ) -> schemas.Bot | None:
+        bot = self.db.session.get(Bot, (user_id, instrument.code))
+        if bot:
+            bot.status = not bot.status
+            self.db.session.merge(bot)
+            self.db.session.commit()
+            return bot
+
+    def get_all_user_bots(self, user_id: uuid.UUID) -> Sequence[Bot]:
+        return self.db.session.scalars(select(Bot).where(Bot.user_id == user_id)).all()
+
+
 
