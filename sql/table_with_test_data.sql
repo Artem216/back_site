@@ -44,16 +44,18 @@ CREATE TABLE public.alembic_version (
 ALTER TABLE public.alembic_version OWNER TO postgress;
 
 --
--- Name: associated_user_instruments; Type: TABLE; Schema: public; Owner: postgress
+-- Name: bots; Type: TABLE; Schema: public; Owner: postgress
 --
 
-CREATE TABLE public.associated_user_instruments (
-    id uuid NOT NULL,
-    code character varying(30) NOT NULL
+CREATE TABLE public.bots (
+    user_id uuid NOT NULL,
+    instrument_code character varying(30) NOT NULL,
+    status boolean DEFAULT false NOT NULL,
+    start_balance numeric
 );
 
 
-ALTER TABLE public.associated_user_instruments OWNER TO postgress;
+ALTER TABLE public.bots OWNER TO postgress;
 
 --
 -- Name: deals; Type: TABLE; Schema: public; Owner: postgress
@@ -66,7 +68,8 @@ CREATE TABLE public.deals (
     deal_type public.dealtype NOT NULL,
     user_id uuid NOT NULL,
     instrument_code character varying(30) NOT NULL,
-    date_time timestamp without time zone DEFAULT now() NOT NULL
+    date_time timestamp without time zone DEFAULT now() NOT NULL,
+    balance numeric
 );
 
 
@@ -135,15 +138,18 @@ ALTER TABLE ONLY public.deals ALTER COLUMN id SET DEFAULT nextval('public.deals_
 --
 
 COPY public.alembic_version (version_num) FROM stdin;
-d5f3a6dd0227
+81ef4e3e725b
 \.
 
 
 --
--- Data for Name: associated_user_instruments; Type: TABLE DATA; Schema: public; Owner: postgress
+-- Data for Name: bots; Type: TABLE DATA; Schema: public; Owner: postgress
 --
 
-COPY public.associated_user_instruments (id, code) FROM stdin;
+COPY public.bots (user_id, instrument_code, status, start_balance) FROM stdin;
+332097ee-807e-4958-b053-1bbf8c35e846	AMEZ	t	\N
+332097ee-807e-4958-b053-1bbf8c35e846	MAGEP	f	\N
+332097ee-807e-4958-b053-1bbf8c35e846	SBER	f	\N
 \.
 
 
@@ -151,14 +157,22 @@ COPY public.associated_user_instruments (id, code) FROM stdin;
 -- Data for Name: deals; Type: TABLE DATA; Schema: public; Owner: postgress
 --
 
-COPY public.deals (id, price, quantity, deal_type, user_id, instrument_code, date_time) FROM stdin;
-1	200.0	11	buy	332097ee-807e-4958-b053-1bbf8c35e846	AIG-RM	2023-12-07 10:53:07.49872
-2	210.0	11	sell	332097ee-807e-4958-b053-1bbf8c35e846	AIG-RM	2023-12-07 10:53:07.49872
-3	10.0	1	buy	332097ee-807e-4958-b053-1bbf8c35e846	AMEZ	2023-12-07 10:53:07.49872
-4	5.0	1	sell	332097ee-807e-4958-b053-1bbf8c35e846	AMEZ	2023-12-07 10:53:07.49872
-5	1000.0	13	buy	332097ee-807e-4958-b053-1bbf8c35e846	MAGEP	2023-12-07 10:53:07.49872
-6	1080.0	13	sell	332097ee-807e-4958-b053-1bbf8c35e846	MAGEP	2023-12-07 10:53:07.49872
-7	343	22	buy	7f6d7fbe-e165-4681-86ca-7e75e2644b95	A-RM	2023-12-07 19:38:12.901859
+COPY public.deals (id, price, quantity, deal_type, user_id, instrument_code, date_time, balance) FROM stdin;
+64	268.61	37	buy	332097ee-807e-4958-b053-1bbf8c35e846	SBER	2023-12-09 18:09:34.647626	61.43000000000029
+65	266.02	37	sell	332097ee-807e-4958-b053-1bbf8c35e846	SBER	2023-12-09 18:09:34.697143	9904.17
+66	265.04	37	buy	332097ee-807e-4958-b053-1bbf8c35e846	SBER	2023-12-09 18:09:34.736006	97.68999999999869
+67	265.26	37	sell	332097ee-807e-4958-b053-1bbf8c35e846	SBER	2023-12-09 18:09:34.776246	9912.309999999998
+68	267.75	37	buy	332097ee-807e-4958-b053-1bbf8c35e846	SBER	2023-12-09 18:09:34.827154	5.559999999997672
+69	265.55	37	sell	332097ee-807e-4958-b053-1bbf8c35e846	SBER	2023-12-09 18:09:34.864233	9830.909999999998
+70	264.95	37	buy	332097ee-807e-4958-b053-1bbf8c35e846	SBER	2023-12-09 18:09:34.903642	27.7599999999984
+71	205.01	48	buy	332097ee-807e-4958-b053-1bbf8c35e846	WUSH	2023-12-09 18:10:50.049179	159.52000000000044
+72	205.68	48	sell	332097ee-807e-4958-b053-1bbf8c35e846	WUSH	2023-12-09 18:10:50.076713	10032.16
+73	206.47	48	buy	332097ee-807e-4958-b053-1bbf8c35e846	WUSH	2023-12-09 18:10:50.09281	121.60000000000036
+74	207.69	48	sell	332097ee-807e-4958-b053-1bbf8c35e846	WUSH	2023-12-09 18:10:50.1089	10090.72
+75	208.08	48	buy	332097ee-807e-4958-b053-1bbf8c35e846	WUSH	2023-12-09 18:10:50.120787	102.8799999999992
+76	209.74	48	sell	332097ee-807e-4958-b053-1bbf8c35e846	WUSH	2023-12-09 18:10:50.177885	10170.4
+77	209.91	48	buy	332097ee-807e-4958-b053-1bbf8c35e846	WUSH	2023-12-09 18:10:50.201647	94.71999999999935
+78	209.0	48	sell	332097ee-807e-4958-b053-1bbf8c35e846	WUSH	2023-12-09 18:10:50.21808	10126.72
 \.
 
 
@@ -172,6 +186,8 @@ BLK-RM	BlackRock Inc.	stock_shares	t
 AIG-RM	American International ORD SHS	stock_shares	t
 AMEZ	Ашинский метзавод ПАО ао	stock_shares	t
 MAGEP	&quot;Магаданэнерго&quot; ПАО ап	stock_shares	t
+SBER	Сбер Банк	stock_shares	t
+WUSH	Whoosh 	stock_shares	t
 \.
 
 
@@ -182,6 +198,10 @@ MAGEP	&quot;Магаданэнерго&quot; ПАО ап	stock_shares	t
 COPY public.users (id, first_name, last_name, email, password) FROM stdin;
 332097ee-807e-4958-b053-1bbf8c35e846	test	test	test1@example.com	$2b$12$mJ3lho3XeiKf2Le8EqNbvOfhDEkMgQ983zOMmKgJjXj/Os4qzcLjW
 7f6d7fbe-e165-4681-86ca-7e75e2644b95	test2	test2	test2@example.com	$2b$12$8.iVwrn0IvEoi2INH0c6pOpp8aDqYuRDvP6GgGCkAyhhpX21fOGMe
+17aa8cd1-2cdc-4060-911e-ee27be49e1be	rus	lan	123@test.com	$2b$12$6Gv5V9H6Ck5CE1iebONTduTu3lD0ifJJ6ySnXSnrczguP4O5KhspK
+109b6a7b-b107-4752-a55d-1c552431097f	rus	lan	test@test.com	$2b$12$rsD2LJ6Z7Y15aViYhUVsQeHwnkqUrl3igyH0uy6VLQg/ljlg9OjXm
+50040eba-7ee0-46a1-8939-07b14cf11256	Rus	Lan	123@ttt.com	$2b$12$l2RR/FdKWu9.5sHm93/jauaxBzz4TSjXTVTsU/.41J9/3Onbbo0WW
+4deee21d-6f3c-4cea-bb54-f62277158a8e	sd	sadf	dd@dd.dd	$2b$12$LTstGEHwMQ7J3cph6pzdsuXOV37WfQV4lfJY/AfsmjKeZiBynCbBm
 \.
 
 
@@ -189,7 +209,7 @@ COPY public.users (id, first_name, last_name, email, password) FROM stdin;
 -- Name: deals_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgress
 --
 
-SELECT pg_catalog.setval('public.deals_id_seq', 7, true);
+SELECT pg_catalog.setval('public.deals_id_seq', 78, true);
 
 
 --
@@ -201,11 +221,11 @@ ALTER TABLE ONLY public.alembic_version
 
 
 --
--- Name: associated_user_instruments associated_user_instruments_pkey; Type: CONSTRAINT; Schema: public; Owner: postgress
+-- Name: bots bots_pkey; Type: CONSTRAINT; Schema: public; Owner: postgress
 --
 
-ALTER TABLE ONLY public.associated_user_instruments
-    ADD CONSTRAINT associated_user_instruments_pkey PRIMARY KEY (id, code);
+ALTER TABLE ONLY public.bots
+    ADD CONSTRAINT bots_pkey PRIMARY KEY (user_id, instrument_code);
 
 
 --
@@ -241,19 +261,11 @@ ALTER TABLE ONLY public.users
 
 
 --
--- Name: associated_user_instruments associated_user_instruments_code_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgress
+-- Name: bots bots_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgress
 --
 
-ALTER TABLE ONLY public.associated_user_instruments
-    ADD CONSTRAINT associated_user_instruments_code_fkey FOREIGN KEY (code) REFERENCES public.instruments(code);
-
-
---
--- Name: associated_user_instruments associated_user_instruments_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgress
---
-
-ALTER TABLE ONLY public.associated_user_instruments
-    ADD CONSTRAINT associated_user_instruments_id_fkey FOREIGN KEY (id) REFERENCES public.users(id);
+ALTER TABLE ONLY public.bots
+    ADD CONSTRAINT bots_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id);
 
 
 --

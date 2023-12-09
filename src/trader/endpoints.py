@@ -54,6 +54,7 @@ async def get_user_deals_by_instrument(
             user=deal.user.id,
             instrument=deal.instrument_code,
             datetime=deal.date_time,
+            balance=deal.balance,
         )
         for deal in deals
     ]

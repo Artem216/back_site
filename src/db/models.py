@@ -29,6 +29,10 @@ class User(Base):
         back_populates="user",
         cascade="all, delete",
     )
+    bots: Mapped[list[Bot]] = relationship(
+            back_populates="user",
+            cascade="all, delete",
+            )
 
 
 class Instrument(Base):
@@ -62,6 +66,7 @@ class Deal(Base):
     user: Mapped[User] = relationship(back_populates="deals")
     instrument_code: Mapped[str] = mapped_column(ForeignKey("instruments.code"))
     instrument: Mapped[Instrument] = relationship(back_populates="deals")
+    balance: Mapped[Decimal] = mapped_column(DECIMAL)
 
     def __repr__(self) -> str:
         return f"Deal(id={self.id}, price={self.price}, quantity={self.quantity}, deal_type={self.deal_type}, user_id={self.user_id}, instrument_code={self.instrument_code})"
@@ -69,8 +74,9 @@ class Deal(Base):
 class Bot(Base):
     __tablename__ = "bots"
 
-    user_id: Mapped[uuid.UUID] = mapped_column(UUID, primary_key=True)
+    user_id: Mapped[uuid.UUID] = mapped_column(UUID, ForeignKey("users.id"), primary_key=True)
     instrument_code: Mapped[str] = mapped_column(String(30), primary_key=True)
     status: Mapped[bool] = mapped_column(Boolean, server_default=expression.false())
-    balance: Mapped[Decimal] = mapped_column(DECIMAL, nullable=True, default = 0.00)
+    start_balance: Mapped[Decimal] = mapped_column(DECIMAL, nullable=True, default = 0.00)
+    user: Mapped[User] = relationship(back_populates="bots")
 

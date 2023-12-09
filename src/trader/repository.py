@@ -3,7 +3,6 @@ from decimal import Decimal
 from typing import Sequence
 
 from sqlalchemy import and_, select
-
 from src.db import schemas
 from src.db.models import Bot, Deal, DealType, Instrument, User
 from src.db.sql import SQLManager
@@ -52,36 +51,6 @@ class InstrumentDAL:
     def get_all(self) -> Sequence[Instrument]:
         return self.db.session.scalars(select(Instrument)).all()
 
-    # def add_user_instrument(
-    #     self, user_id: uuid.UUID, instrument_data: schemas.InstrumentBase
-    # ) -> schemas.Instrument:
-    #     instrument = self.get(instrument_data)
-    #     if not instrument:
-    #         instrument = Instrument(**instrument_data.model_dump())
-    #     stmt = select(User).where(User.id == user_id)
-    #     user = self.db.session.scalars(stmt).one()
-    #     user.instruments.append(instrument)
-    #     self.db.session.merge(user)
-    #     self.db.session.commit()
-    #     return instrument
-
-    # def get_user_instruments(self, user_id: uuid.UUID) -> list[schemas.Instrument]:
-    #     stmt = (
-    #         select(Instrument)
-    #         .join(Instrument.deals)
-    #         .where(Deal.user_id == user_id)
-    #         .distinct()
-    #     )
-    #     instruments = self.db.session.scalars(stmt).all()
-    #     return [
-    #         schemas.Instrument(
-    #             code=instrument.code,
-    #             title=instrument.title,
-    #             group=instrument.group,
-    #         )
-    #         for instrument in instruments
-    #     ]
-
 
 class DealDAL:
     """Data access layer for deals"""
@@ -106,6 +75,7 @@ class DealDAL:
         quantity: int,
         deal_type: DealType,
         user_id: uuid.UUID,
+        balance: Decimal,
     ) -> Deal:
         deal = Deal(
             instrument_code=instrument_code,
@@ -113,6 +83,7 @@ class DealDAL:
             quantity=quantity,
             deal_type=deal_type,
             user_id=user_id,
+            balance=balance,
         )
         self.db.session.add(deal)
         self.db.session.commit()
@@ -134,6 +105,7 @@ class DealDAL:
             )
         )
         return self.db.session.scalars(stmt).all()
+
 
 class BotDAL:
     """Data access layer for bots"""
@@ -191,6 +163,4 @@ class BotDAL:
 
     def get_all_user_bots(self, user_id: uuid.UUID) -> Sequence[Bot]:
         return self.db.session.scalars(select(Bot).where(Bot.user_id == user_id)).all()
-
-
 

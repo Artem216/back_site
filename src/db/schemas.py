@@ -26,12 +26,12 @@ class DealBase(BaseModel):
     deal_type: DealType
     user: uuid.UUID
     instrument: str
+    balance: Decimal
 
 
 class Deal(DealBase):
     id: int
     datetime: datetime
-    ...
 
 
 class UserDealsRequest(BaseModel):
