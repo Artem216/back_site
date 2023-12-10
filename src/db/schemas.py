@@ -65,5 +65,6 @@ class Bot(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     instrument_code: str
-    status: bool
+    start_balance: Decimal
+    status: bool = False
 

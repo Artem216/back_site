@@ -126,11 +126,10 @@ class BotDAL:
     def add(
         self,
         user_id: uuid.UUID,
-        code: schemas.InstrumentBase,
+        code: schemas.Bot,
     ) -> Bot:
-        bot = Bot(user_id=user_id, instrument_code=code.code)
+        bot = Bot(user_id=user_id, instrument_code=code.instrument_code, start_balance=code.start_balance)
         self.db.session.add(bot)
-        # TODO: check is bot exist
         self.db.session.commit()
 
         return bot
@@ -138,9 +137,9 @@ class BotDAL:
     def get(
         self,
         user_id: uuid.UUID,
-        code: schemas.InstrumentBase,
+        code: str,
     ) -> Bot | None:
-        bot = self.db.session.get(Bot, (user_id, code.code))
+        bot = self.db.session.get(Bot, (user_id, code))
         if bot:
             return bot
 

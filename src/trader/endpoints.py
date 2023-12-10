@@ -1,3 +1,4 @@
+from decimal import Decimal
 from fastapi import APIRouter, Depends, HTTPException, status
 from src.db import schemas
 from src.db.dependencies import (
@@ -66,14 +67,14 @@ async def get_user_deals_by_instrument(
     status_code=status.HTTP_200_OK,
 )
 async def add_bot(
-    instrument_data: schemas.InstrumentBase,
+    bot_data: schemas.Bot,
     current_user: UserDto = Depends(get_current_user),
     bot_dal: BotDAL = Depends(get_bot_dal),
 ) -> schemas.Bot:
-    bot = bot_dal.get(current_user.id, instrument_data)
+    bot = bot_dal.get(current_user.id, bot_data.instrument_code)
     if not bot:
-        bot = bot_dal.add(current_user.id, instrument_data)
-        return schemas.Bot(instrument_code=bot.instrument_code, status=bot.status)
+        bot = bot_dal.add(current_user.id, bot_data )
+        return schemas.Bot(instrument_code=bot.instrument_code, status=bot.status, start_balance=bot.start_balance)
     else:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail="Bot already exist"
@@ -92,7 +93,7 @@ async def get_bot_status(
 ) -> schemas.Bot:
     bot = bot_dal.get_bot_status(user_id=current_user.id, instrument=instrument_data)
     if bot:
-        return schemas.Bot(instrument_code=bot.instrument_code, status=bot.status)
+        return schemas.Bot(instrument_code=bot.instrument_code, status=bot.status, start_balance=bot.start_balance)
     else:
         raise HTTPException(status_code=404, detail="Bot not found")
 
@@ -109,7 +110,7 @@ async def bot_toggle_status(
 ) -> schemas.Bot:
     bot = bot_dal.bot_toggle_status(user_id=current_user.id, instrument=instrument_data)
     if bot:
-        return schemas.Bot(instrument_code=instrument_data.code, status=bot.status)
+        return schemas.Bot(instrument_code=instrument_data.code, status=bot.status, start_balance=bot.start_balance)
     else:
         raise HTTPException(status_code=404, detail="Bot not found")
 
@@ -126,7 +127,7 @@ async def get_user_instruments(
     bots = bot_dal.get_all_user_bots(current_user.id)
 
     return [
-        schemas.Bot(instrument_code=bot.instrument_code, status=bot.status)
+        schemas.Bot(instrument_code=bot.instrument_code, status=bot.status, start_balance=bot.start_balance)
         for bot in bots
     ]
 
