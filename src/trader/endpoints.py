@@ -45,7 +45,7 @@ async def get_user_deals_by_instrument(
     current_user: UserDto = Depends(get_current_user),
     deal_dal: DealDAL = Depends(get_deal_dal),
 ) -> list[schemas.Deal]:
-    deals = deal_dal.get_user_deals_by_instrument(current_user.id, deal_request)
+    deals = deal_dal.get_user_deals_by_instrument(current_user.id, deal_request.instrument_code)
     return [
         schemas.Deal(
             id=deal.id,
@@ -117,17 +117,33 @@ async def bot_toggle_status(
 
 @router.get(
     "/get_all_user_bots",
-    response_model=list[schemas.Bot],
+    response_model=list[schemas.BotWithCurrentBalance],
     status_code=status.HTTP_200_OK,
 )
-async def get_user_instruments(
+async def get_user_bots(
     current_user: UserDto = Depends(get_current_user),
     bot_dal: BotDAL = Depends(get_bot_dal),
-) -> list[schemas.Bot]:
+    deal_dal: DealDAL = Depends(get_deal_dal),
+) -> list[schemas.BotWithCurrentBalance]:
     bots = bot_dal.get_all_user_bots(current_user.id)
+    bot_result_list = []
+    for bot in bots:
+        bot_deals = deal_dal.get_user_deals_by_instrument(current_user.id, bot.instrument_code)
+        deals_end_sum = sum([deal.price * deal.quantity for deal in bot_deals])
+        bot_result_list.append(
+            schemas.BotWithCurrentBalance(
+                instrument_code=bot.instrument_code,
+                status=bot.status,
+                start_balance=bot.start_balance,
+                current_balance=Decimal(deals_end_sum)
+            )
+        )
+    return bot_result_list
 
-    return [
-        schemas.Bot(instrument_code=bot.instrument_code, status=bot.status, start_balance=bot.start_balance)
-        for bot in bots
-    ]
+
+
+    # return [
+    #     schemas.BotWithCurrentBalance(instrument_code=bot.instrument_code, status=bot.status, start_balance=bot.start_balance)
+    #     for bot in bots
+    # ]
 

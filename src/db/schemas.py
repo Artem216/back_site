@@ -68,3 +68,9 @@ class Bot(BaseModel):
     start_balance: Decimal
     status: bool = False
 
+class BotWithCurrentBalance(Bot):
+    model_config = ConfigDict(from_attributes=True)
+    current_balance: Decimal
+
+
+

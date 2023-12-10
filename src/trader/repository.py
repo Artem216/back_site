@@ -96,11 +96,11 @@ class DealDAL:
             return user.deals
 
     def get_user_deals_by_instrument(
-        self, user_id: uuid.UUID, deals_request: schemas.UserDealsRequest
+            self, user_id: uuid.UUID, instrument_code: str
     ) -> Sequence[Deal]:
         stmt = select(Deal).where(
             and_(
-                Deal.instrument_code == deals_request.instrument_code,
+                Deal.instrument_code == instrument_code,
                 Deal.user_id == user_id,
             )
         )
