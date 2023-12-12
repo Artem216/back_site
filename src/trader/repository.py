@@ -163,3 +163,6 @@ class BotDAL:
     def get_all_user_bots(self, user_id: uuid.UUID) -> Sequence[Bot]:
         return self.db.session.scalars(select(Bot).where(Bot.user_id == user_id)).all()
 
+    def get_all_active_bots(self) -> Sequence[Bot]:
+        return self.db.session.scalars(select(Bot).where(Bot.status == True)).all()
+

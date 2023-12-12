@@ -1,21 +1,24 @@
 import math
-import time
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from typing import Literal
+import asyncio
 
 import pandas as pd
 import pandas_ta as ta
 import tqdm
 from moexalgo import Ticker
-
 from src.db.models import DealType
 from src.db.sql import SQLManager
 from src.trader.repository import BotDAL, DealDAL
 from src.utils.logger import conf_logger
 
 logger = conf_logger(__name__, "D")
+bot_dal = BotDAL(SQLManager())
+deal_dal = DealDAL(SQLManager())
 
+def buy_requst_to_brocker(): ...
+def sell_requst_to_brocker(): ...
 
 class Bot:
     def __init__(self, user_id, instrument_code: str, status: bool, balance) -> None:
@@ -29,6 +32,7 @@ class Bot:
         self.in_stock = 0
 
     def sell_request(self, price):
+        sell_requst_to_brocker()
         logger.debug(
             "Sell request for instrument: %s, price: %s, quantity: %s",
             self.instrument_code,
@@ -48,6 +52,7 @@ class Bot:
             price,
             quantity,
         )
+        buy_requst_to_brocker()
         self.balance -= price * quantity
         self._add_deal_to_db(price=price, quantity=quantity, deal_type=DealType.buy, balance = self.balance)
         self.in_stock += quantity
@@ -136,28 +141,45 @@ class Bot:
         prediction = max(
             data["indicator_rsi"].iloc[-1], data["indicator_alligator"].iloc[-1]
         )
-        deal_price = data["close"].iloc[-1]
+        deal_price = Decimal(data["close"].iloc[-1])
         logger.debug("Prediction: %s, deal_price: %s", prediction, deal_price)
 
         return prediction, deal_price
 
-def run_bot():
-    bot = Bot(
-        user_id="332097ee-807e-4958-b053-1bbf8c35e846",
-        instrument_code="SBER",
-        status=True,
-        balance=10_000,
-    )
+
+
+async def run_bot(bot: Bot):
     candles = bot.get_candles()
+    logger.debug(f"{candles=}, \n {bot.candles=}")
     if not candles.equals(bot.candles):
-        bot.candles = candles
+        bot.candles = candles.copy(deep=True)
         desision, price = bot.make_prediction(candles)
         if desision == 1 and bot.in_stock > 0:
             bot.sell_request(price)
         elif desision == 2:
-            quantity = bot.balance // price
+            bot_deals = deal_dal.get_user_deals_by_instrument(bot.user_id, bot.instrument_code)
+            current_balance = bot.balance + sum([deal.price * deal.quantity for deal in bot_deals])
+
+            quantity = current_balance // price
             if quantity > 0:
                 bot.buy_request(price, quantity)
+
+    else:
+        logger.debug("Nothing to do")
+
+async def run_bots():
+    bots_from_db = bot_dal.get_all_active_bots()
+    bots = [Bot(
+        user_id=bot.user_id,
+        instrument_code=bot.instrument_code,
+        status=bot.status,
+        balance=bot.start_balance
+        ) for bot in bots_from_db]
+    while True:
+        for bot in bots:
+            await run_bot(bot)
+        await asyncio.sleep(600)
+
 
 
 
@@ -209,3 +231,5 @@ def fill_db_with_test_deals(instrument_code):
                 quantity = bot.balance // price
                 if quantity > 0:
                     bot.buy_request(price, quantity)
+
+
