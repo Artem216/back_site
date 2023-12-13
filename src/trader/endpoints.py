@@ -7,6 +7,7 @@ from src.db.dependencies import (
     get_deal_dal,
     get_instrument_dal,
 )
+from src.db.models import DealType
 from src.trader.repository import BotDAL, DealDAL, InstrumentDAL
 from src.user.domain import UserDto
 from src.utils.logger import conf_logger
@@ -129,13 +130,32 @@ async def get_user_bots(
     bot_result_list = []
     for bot in bots:
         bot_deals = deal_dal.get_user_deals_by_instrument(current_user.id, bot.instrument_code)
-        deals_end_sum = bot.start_balance + sum([deal.price * deal.quantity for deal in bot_deals])
+        # deals_end_sum = bot.start_balance + sum([deal.price * deal.quantity for deal in bot_deals])
+        current_balance = (
+            bot.start_balance
+            + sum(
+                [
+                    deal.price * deal.quantity
+                    for deal in bot_deals
+                    if deal.deal_type == DealType.sell
+                ]
+            )
+            - sum(
+                [
+                    deal.price * deal.quantity
+                    for deal in bot_deals
+                    if deal.deal_type == DealType.buy
+                ]
+            )
+        )
+
+
         bot_result_list.append(
             schemas.BotWithCurrentBalance(
                 instrument_code=bot.instrument_code,
                 status=bot.status,
                 start_balance=bot.start_balance,
-                current_balance=Decimal(deals_end_sum)
+                current_balance=Decimal(current_balance),
             )
         )
     return bot_result_list

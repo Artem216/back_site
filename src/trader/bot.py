@@ -1,13 +1,13 @@
+import asyncio
 import math
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from typing import Literal
-import asyncio
 
 import pandas as pd
 import pandas_ta as ta
-import tqdm
 from moexalgo import Ticker
+
 from src.db.models import DealType
 from src.db.sql import SQLManager
 from src.trader.repository import BotDAL, DealDAL
@@ -17,8 +17,17 @@ logger = conf_logger(__name__, "D")
 bot_dal = BotDAL(SQLManager())
 deal_dal = DealDAL(SQLManager())
 
-def buy_requst_to_brocker(): ...
-def sell_requst_to_brocker(): ...
+
+def buy_requst_to_brocker():
+    logger.debug("buy_requst_to_brocker")
+
+
+def sell_requst_to_brocker():
+    logger.debug("sell_requst_to_brocker")
+
+
+last_candles_df: dict[str, pd.DataFrame] = {}
+
 
 class Bot:
     def __init__(self, user_id, instrument_code: str, status: bool, balance) -> None:
@@ -26,7 +35,6 @@ class Bot:
         self.instrument_code = instrument_code
         self.status = status
         self.balance = balance
-        self.candles: pd.DataFrame = pd.DataFrame()
         self.bot_dal = BotDAL(SQLManager())
         self.deal_dal = DealDAL(SQLManager())
         self.in_stock = 0
@@ -41,7 +49,10 @@ class Bot:
         )
         self.balance += price * self.in_stock
         self._add_deal_to_db(
-            price=price, quantity=self.in_stock, deal_type=DealType.sell, balance=self.balance
+            price=price,
+            quantity=self.in_stock,
+            deal_type=DealType.sell,
+            balance=self.balance,
         )
         self.in_stock = 0
 
@@ -54,7 +65,9 @@ class Bot:
         )
         buy_requst_to_brocker()
         self.balance -= price * quantity
-        self._add_deal_to_db(price=price, quantity=quantity, deal_type=DealType.buy, balance = self.balance)
+        self._add_deal_to_db(
+            price=price, quantity=quantity, deal_type=DealType.buy, balance=self.balance
+        )
         self.in_stock += quantity
 
     def _add_deal_to_db(self, price, quantity, deal_type, balance):
@@ -66,6 +79,29 @@ class Bot:
             user_id=self.user_id,
             balance=balance,
         )
+
+    def get_current_balance(self) -> Decimal:
+        bot_deals = deal_dal.get_user_deals_by_instrument(
+            self.user_id, self.instrument_code
+        )
+        current_balance = (
+            self.balance
+            + sum(
+                [
+                    deal.price * deal.quantity
+                    for deal in bot_deals
+                    if deal.deal_type == DealType.sell
+                ]
+            )
+            - sum(
+                [
+                    deal.price * deal.quantity
+                    for deal in bot_deals
+                    if deal.deal_type == DealType.buy
+                ]
+            )
+        )
+        return current_balance
 
     def get_candles(self, period: str = "10m") -> pd.DataFrame:
         logger.debug("Getting candles for %s", self.instrument_code)
@@ -147,19 +183,17 @@ class Bot:
         return prediction, deal_price
 
 
-
 async def run_bot(bot: Bot):
     candles = bot.get_candles()
-    logger.debug(f"{candles=}, \n {bot.candles=}")
-    if not candles.equals(bot.candles):
-        bot.candles = candles.copy(deep=True)
+    saved_candles = last_candles_df.get(bot.instrument_code)
+    # logger.debug(f"{candles=}, \n {saved_candles}")
+    if not candles.equals(saved_candles):
+        last_candles_df[bot.instrument_code] = candles.copy(deep=True)
         desision, price = bot.make_prediction(candles)
         if desision == 1 and bot.in_stock > 0:
             bot.sell_request(price)
         elif desision == 2:
-            bot_deals = deal_dal.get_user_deals_by_instrument(bot.user_id, bot.instrument_code)
-            current_balance = bot.balance + sum([deal.price * deal.quantity for deal in bot_deals])
-
+            current_balance = bot.get_current_balance()
             quantity = current_balance // price
             if quantity > 0:
                 bot.buy_request(price, quantity)
@@ -167,69 +201,17 @@ async def run_bot(bot: Bot):
     else:
         logger.debug("Nothing to do")
 
+
 async def run_bots():
-    bots_from_db = bot_dal.get_all_active_bots()
-    bots = [Bot(
-        user_id=bot.user_id,
-        instrument_code=bot.instrument_code,
-        status=bot.status,
-        balance=bot.start_balance
-        ) for bot in bots_from_db]
     while True:
-        for bot in bots:
+        bots_from_db = bot_dal.get_all_active_bots()
+        for raw_bot in bots_from_db:
+            bot = Bot(
+                user_id=raw_bot.user_id,
+                instrument_code=raw_bot.instrument_code,
+                status=raw_bot.status,
+                balance=raw_bot.start_balance,
+            )
             await run_bot(bot)
         await asyncio.sleep(600)
-
-
-
-
-def create_list_of_test_dataframes(instrument_code) -> list[pd.DataFrame]:
-    def make_candles(instrument_code, date, period="1h"):
-        now = date
-        now = now.replace(minute=0, second=0, microsecond=0) - timedelta(hours=1)
-        now = now.replace(tzinfo=None)
-        start = now - timedelta(days=10)
-        ticket = Ticker(instrument_code)
-        data = pd.DataFrame(ticket.candles(date=start, till_date=now, period=period))
-        data = data[-30:].reset_index(drop=True)
-        return data
-
-
-    start = datetime.strptime("2023-12-06 23:00:00", "%Y-%m-%d %H:%M:%S")
-    days = 3
-    end = start + timedelta(days=days)
-    current = start
-    date_time = []
-    while current <= end:
-        if not (0 <= current.hour <= 8):
-            date_time.append(current)
-        current += timedelta(hours=1)
-
-    dataframes_list = []
-    for date in tqdm.tqdm(date_time):
-        dataframes_list.append(make_candles(instrument_code, date, period="10m"))
-    return dataframes_list
-
-
-def fill_db_with_test_deals(instrument_code):
-
-    bot = Bot(
-        user_id="332097ee-807e-4958-b053-1bbf8c35e846",
-        instrument_code=instrument_code,
-        status=True,
-        balance=10_000,
-    )
-    candles = bot.get_candles()
-    candles_list = create_list_of_test_dataframes(instrument_code)
-    for candles in candles_list:
-        if not candles.equals(bot.candles):
-            bot.candles = candles
-            desision, price = bot.make_prediction(candles)
-            if desision == 1 and bot.in_stock > 0:
-                bot.sell_request(price)
-            elif desision == 2:
-                quantity = bot.balance // price
-                if quantity > 0:
-                    bot.buy_request(price, quantity)
-
 
