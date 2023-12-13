@@ -130,6 +130,10 @@ async def get_user_bots(
     bot_result_list = []
     for bot in bots:
         bot_deals = deal_dal.get_user_deals_by_instrument(current_user.id, bot.instrument_code)
+        if bot_deals:
+            current_balance = bot_deals[-1].balance
+        else:
+            current_balance = bot.start_balance
         # deals_end_sum = bot.start_balance + sum([deal.price * deal.quantity for deal in bot_deals])
         current_balance = (
             bot.start_balance
@@ -148,7 +152,6 @@ async def get_user_bots(
                 ]
             )
         )
-
 
         bot_result_list.append(
             schemas.BotWithCurrentBalance(

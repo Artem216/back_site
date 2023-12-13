@@ -30,11 +30,12 @@ last_candles_df: dict[str, pd.DataFrame] = {}
 
 
 class Bot:
-    def __init__(self, user_id, instrument_code: str, status: bool, balance) -> None:
+    def __init__(self, user_id, instrument_code: str, status: bool, start_balance) -> None:
         self.user_id = user_id
         self.instrument_code = instrument_code
         self.status = status
-        self.balance = balance
+        self.start_balance = start_balance
+        # self.balance = balance
         self.bot_dal = BotDAL(SQLManager())
         self.deal_dal = DealDAL(SQLManager())
         self.in_stock = 0
@@ -47,12 +48,12 @@ class Bot:
             price,
             self.in_stock,
         )
-        self.balance += price * self.in_stock
+        # self.balance += price * self.in_stock
         self._add_deal_to_db(
             price=price,
             quantity=self.in_stock,
             deal_type=DealType.sell,
-            balance=self.balance,
+            balance=self.get_current_balance(),
         )
         self.in_stock = 0
 
@@ -64,9 +65,9 @@ class Bot:
             quantity,
         )
         buy_requst_to_brocker()
-        self.balance -= price * quantity
+        # self.balance -= price * quantity
         self._add_deal_to_db(
-            price=price, quantity=quantity, deal_type=DealType.buy, balance=self.balance
+            price=price, quantity=quantity, deal_type=DealType.buy, balance=self.get_current_balance()
         )
         self.in_stock += quantity
 
@@ -85,7 +86,7 @@ class Bot:
             self.user_id, self.instrument_code
         )
         current_balance = (
-            self.balance
+                self.start_balance
             + sum(
                 [
                     deal.price * deal.quantity
@@ -197,6 +198,7 @@ async def run_bot(bot: Bot):
             quantity = current_balance // price
             if quantity > 0:
                 bot.buy_request(price, quantity)
+        logger.debug("current_balance: %s", bot.get_current_balance())
 
     else:
         logger.debug("Nothing to do")
@@ -210,7 +212,7 @@ async def run_bots():
                 user_id=raw_bot.user_id,
                 instrument_code=raw_bot.instrument_code,
                 status=raw_bot.status,
-                balance=raw_bot.start_balance,
+                start_balance=raw_bot.start_balance,
             )
             await run_bot(bot)
         await asyncio.sleep(600)

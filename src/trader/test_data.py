@@ -1,4 +1,5 @@
 """Module for fill db with test deals"""
+import uuid
 from src.trader.bot import Bot
 
 from datetime import datetime, timedelta
@@ -44,12 +45,15 @@ def create_list_of_test_dataframes(instrument_code) -> list[pd.DataFrame]:
 
 
 def fill_db_with_test_deals(instrument_code, user_id = "332097ee-807e-4958-b053-1bbf8c35e846"):
+    bot_in_db = bot_dal.get(uuid.UUID(user_id), instrument_code)
+    if not bot_in_db:
+        raise Exception("Bot not found")
 
     bot = Bot(
-        user_id=user_id,
-        instrument_code=instrument_code,
-        status=True,
-        balance=10_000,
+        user_id=bot_in_db.user_id,
+        instrument_code=bot_in_db.instrument_code,
+        status=bot_in_db.status,
+        start_balance=bot_in_db.start_balance,
     )
     candles = bot.get_candles()
     candles_list = create_list_of_test_dataframes(instrument_code)
@@ -66,6 +70,7 @@ def fill_db_with_test_deals(instrument_code, user_id = "332097ee-807e-4958-b053-
                 quantity = current_balance // price
                 if quantity > 0:
                     bot.buy_request(price, quantity)
+            logger.debug("current_balance: %s", bot.get_current_balance())
 
         else:
             logger.debug("Nothing to do")
