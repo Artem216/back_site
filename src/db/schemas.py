@@ -71,6 +71,7 @@ class Bot(BaseModel):
 class BotWithCurrentBalance(Bot):
     model_config = ConfigDict(from_attributes=True)
     current_balance: Decimal
+    in_stock: Decimal = Decimal(0)
 
 
 

@@ -132,9 +132,17 @@ async def get_user_bots(
     for bot in bots:
         bot_deals = deal_dal.get_user_deals_by_instrument(current_user.id, bot.instrument_code)
         if bot_deals:
-            current_balance = bot_deals[-1].balance
+            last_deal = bot_deals[-1]
+            current_balance = last_deal.balance
+            if last_deal.deal_type == DealType.buy:
+                in_stock: Decimal = last_deal.quantity*last_deal.price 
+            else:
+                in_stock = Decimal(0)
+
+            
         else:
             current_balance = bot.start_balance
+            in_stock = Decimal(0)
         # deals_end_sum = bot.start_balance + sum([deal.price * deal.quantity for deal in bot_deals])
         current_balance = (
             bot.start_balance
@@ -160,6 +168,7 @@ async def get_user_bots(
                 status=bot.status,
                 start_balance=round(bot.start_balance, 2),
                 current_balance=round(current_balance, 2),
+                in_stock = round(in_stock, 2),
             )
         )
     return bot_result_list
