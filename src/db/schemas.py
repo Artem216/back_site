@@ -26,7 +26,7 @@ class DealBase(BaseModel):
     deal_type: DealType
     user: uuid.UUID
     instrument: str
-    balance: Decimal
+    balance: Decimal = Field(ge=0.01, decimal_places=2)
 
 
 class Deal(DealBase):

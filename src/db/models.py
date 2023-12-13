@@ -69,7 +69,7 @@ class Deal(Base):
     balance: Mapped[Decimal] = mapped_column(DECIMAL)
 
     def __repr__(self) -> str:
-        return f"Deal(id={self.id}, price={self.price}, quantity={self.quantity}, deal_type={self.deal_type}, user_id={self.user_id}, instrument_code={self.instrument_code})"
+        return f"Deal(id={self.id}, price={self.price}, quantity={self.quantity}, deal_type={self.deal_type}, user_id={self.user_id}, instrument_code={self.instrument_code}, balance={self.balance})"
 
 class Bot(Base):
     __tablename__ = "bots"

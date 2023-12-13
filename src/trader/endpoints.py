@@ -47,16 +47,17 @@ async def get_user_deals_by_instrument(
     deal_dal: DealDAL = Depends(get_deal_dal),
 ) -> list[schemas.Deal]:
     deals = deal_dal.get_user_deals_by_instrument(current_user.id, deal_request.instrument_code)
+    logger.debug(f"deals: {deals}")
     return [
         schemas.Deal(
             id=deal.id,
-            price=deal.price,
+            price=round(deal.price, 2),
             quantity=deal.quantity,
             deal_type=deal.deal_type,
             user=deal.user.id,
             instrument=deal.instrument_code,
             datetime=deal.date_time,
-            balance=deal.balance,
+            balance=round(deal.balance, 2),
         )
         for deal in deals
     ]
@@ -157,8 +158,8 @@ async def get_user_bots(
             schemas.BotWithCurrentBalance(
                 instrument_code=bot.instrument_code,
                 status=bot.status,
-                start_balance=bot.start_balance,
-                current_balance=Decimal(current_balance),
+                start_balance=round(bot.start_balance, 2),
+                current_balance=round(current_balance, 2),
             )
         )
     return bot_result_list
