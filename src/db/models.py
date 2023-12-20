@@ -9,74 +9,65 @@ from sqlalchemy import DECIMAL, UUID, Boolean, DateTime, Enum, ForeignKey, Integ
 from sqlalchemy.orm import Mapped, declarative_base, mapped_column, relationship
 from sqlalchemy.sql import expression, func
 
+from ..user.domain import UserRole
+from ..order.domains import OrderStatus
+
 Base = declarative_base()
 
-
-class DealType(enum.Enum):
-    buy = "buy"
-    sell = "sell"
 
 
 class User(Base):
     __tablename__ = "users"
 
-    id: Mapped[uuid.UUID] = mapped_column(UUID, primary_key=True, default=uuid.uuid4)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, default=uuid.uuid4)
     first_name: Mapped[str] = mapped_column(String(50))
     last_name: Mapped[str] = mapped_column(String(50))
     email: Mapped[str] = mapped_column(String(100), unique=True)
     password: Mapped[str] = mapped_column(String)
-    deals: Mapped[list[Deal]] = relationship(
-        back_populates="user",
-        cascade="all, delete",
-    )
-    bots: Mapped[list[Bot]] = relationship(
-            back_populates="user",
-            cascade="all, delete",
-            )
+    adress: Mapped[str] = mapped_column(String)
+    role: Mapped[str] = mapped_column(Enum(UserRole), default=UserRole.person)
+    pay_method: Mapped[str] = mapped_column(String)
 
-
-class Instrument(Base):
-    __tablename__ = "instruments"
-
-    code: Mapped[str] = mapped_column(String(30), primary_key=True)
-    title: Mapped[str] = mapped_column(String)
-    group: Mapped[str] = mapped_column(String(30))
-    has_model: Mapped[bool] = mapped_column(Boolean, server_default=expression.false())
-    deals: Mapped[list[Deal]] = relationship(
-        back_populates="instrument",
-        cascade="all, delete",
+    orders = relationship(
+        'Order',
+        primaryjoin='User.id == Order.user_id',
+        back_populates="user"
     )
 
-    def __repr__(self) -> str:
-        return f"Instrument(code={self.code}, title={self.title})"
 
 
-class Deal(Base):
-    __tablename__ = "deals"
+class Order(Base):
+    __tablename__ = 'orders'
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    price: Mapped[Decimal]
-    quantity: Mapped[int]
-    deal_type: Mapped[DealType] = mapped_column(Enum(DealType))
-    date_time: Mapped[datetime] = mapped_column(
-        DateTime,
-        server_default=func.now(),
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey('users.id'))
+    date: Mapped[datetime] = mapped_column(DateTime)
+    status: Mapped[str] = mapped_column(Enum(OrderStatus), default=OrderStatus.in_process)
+
+    details = relationship(
+        'OrderDetails',
+        primaryjoin='Order.id == OrdersDetails.order_id',
+        back_populates='orders'
     )
-    user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"))
-    user: Mapped[User] = relationship(back_populates="deals")
-    instrument_code: Mapped[str] = mapped_column(ForeignKey("instruments.code"))
-    instrument: Mapped[Instrument] = relationship(back_populates="deals")
-    balance: Mapped[Decimal] = mapped_column(DECIMAL)
+    
 
-    def __repr__(self) -> str:
-        return f"Deal(id={self.id}, price={self.price}, quantity={self.quantity}, deal_type={self.deal_type}, user_id={self.user_id}, instrument_code={self.instrument_code}, balance={self.balance})"
+class OrderDetails(Base):
+    __tablename__ = 'ordersDetails'
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    order_id: Mapped[int] = mapped_column(Integer, ForeignKey('orders.id'))
+    product_id: Mapped[int] = mapped_column(Integer)
+    quantity: Mapped[int] = mapped_column(Integer)
 
-class Bot(Base):
-    __tablename__ = "bots"
 
-    user_id: Mapped[uuid.UUID] = mapped_column(UUID, ForeignKey("users.id"), primary_key=True)
-    instrument_code: Mapped[str] = mapped_column(String(30), primary_key=True)
-    status: Mapped[bool] = mapped_column(Boolean, server_default=expression.false())
-    start_balance: Mapped[Decimal] = mapped_column(DECIMAL, nullable=True, default = 0.00)
-    user: Mapped[User] = relationship(back_populates="bots")
+class Coupon(Base):
 
+    __tablename__ = 'coupons'
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    code: Mapped[str] = mapped_column(String)
+    discount: Mapped[int] = mapped_column(Integer)
+    expiration_date: Mapped[datetime] = mapped_column(DateTime)
+    is_used: Mapped[bool] = mapped_column(Boolean)
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey('users.id'))
+
+    user = relationship('User', back_populates='coupons')

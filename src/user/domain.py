@@ -1,5 +1,12 @@
 import uuid
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
+from enum import Enum
+
+
+class UserRole(str, Enum):
+    admin = "admin"
+    person = "person"
+
 
 
 class UserDto(BaseModel):
