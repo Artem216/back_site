@@ -3,18 +3,27 @@ from src.auth.jwt import decode_jwt, oauth2_scheme
 from src.db.sql import SQLManager
 from src.user.domain import UserDto
 from src.user.repository import UserRepository
-from src.utils.logger import conf_logger
+from src.order.repository import OrderRepository
+from src.cart.repository import CartRepository
+# from src.utils.logger import conf_logger
 
-logger = conf_logger(__name__)
+# logger = conf_logger(__name__)
 
 
 async def get_db() -> SQLManager:
     """Get the database connection"""
-    return SQLManager(conf_logger("db"))
+    return SQLManager()
 
 
 async def get_user_repository(db: SQLManager = Depends(get_db)) -> UserRepository:
     return UserRepository(db)
+
+async def get_order_repository(db: SQLManager = Depends(get_db)) -> OrderRepository:
+    return OrderRepository(db)
+
+
+async def get_cart_repository(db: SQLManager = Depends(get_db)) -> CartRepository:
+    return CartRepository(db)
 
 
 async def get_current_user(

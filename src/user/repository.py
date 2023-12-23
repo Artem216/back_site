@@ -7,7 +7,7 @@ from src.db.models import User
 from src.db.repository import AbstractRepository
 from src.db.schemas import Deal as DealSchema
 from src.db.sql import SQLManager
-from src.utils.logger import conf_logger as logger
+# from src.utils.logger import conf_logger as logger
 
 
 class UserRepository(AbstractRepository):
@@ -16,7 +16,7 @@ class UserRepository(AbstractRepository):
     def __init__(self, db_manager: SQLManager) -> None:
         super().__init__()
         self.db = db_manager
-        self.logger = logger("UserRepository")
+        # self.logger = logger("UserRepository")
 
     def __new__(cls, *args, **kwargs):
         """Singleton pattern"""
@@ -37,7 +37,7 @@ class UserRepository(AbstractRepository):
     def get(
         self, user_id: uuid.UUID | None = None, email: str | None = None
     ) -> User | None:
-        self.logger.debug("getting user by id %s or email %s", user_id, email)
+        # self.logger.debug("getting user by id %s or email %s", user_id, email)
         if user_id:
             return self.db.session.query(User).filter(User.id == user_id).first()
         elif email:

@@ -15,18 +15,19 @@ from ..order.domains import OrderStatus
 Base = declarative_base()
 
 
+from random import randint
 
 class User(Base):
     __tablename__ = "users"
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, default=uuid.uuid4)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, default=randint(2, 256))
     first_name: Mapped[str] = mapped_column(String(50))
     last_name: Mapped[str] = mapped_column(String(50))
     email: Mapped[str] = mapped_column(String(100), unique=True)
     password: Mapped[str] = mapped_column(String)
-    adress: Mapped[str] = mapped_column(String)
+    adress: Mapped[str] = mapped_column(String, default= "")
     role: Mapped[str] = mapped_column(Enum(UserRole), default=UserRole.person)
-    pay_method: Mapped[str] = mapped_column(String)
+    pay_method: Mapped[str] = mapped_column(String, default= "")
 
     orders = relationship(
         'Order',
@@ -34,40 +35,22 @@ class User(Base):
         back_populates="user"
     )
 
-
-
-class Order(Base):
-    __tablename__ = 'orders'
-
-    id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    user_id: Mapped[int] = mapped_column(Integer, ForeignKey('users.id'))
-    date: Mapped[datetime] = mapped_column(DateTime)
-    status: Mapped[str] = mapped_column(Enum(OrderStatus), default=OrderStatus.in_process)
-
-    details = relationship(
-        'OrderDetails',
-        primaryjoin='Order.id == OrdersDetails.order_id',
-        back_populates='orders'
+    cart = relationship(
+        "Cart",
+        primaryjoin='User.id == Cart.user_id',
+        back_populates="user"
     )
-    
-
-class OrderDetails(Base):
-    __tablename__ = 'ordersDetails'
-    id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    order_id: Mapped[int] = mapped_column(Integer, ForeignKey('orders.id'))
-    product_id: Mapped[int] = mapped_column(Integer)
-    quantity: Mapped[int] = mapped_column(Integer)
 
 
-class Coupon(Base):
+# class Coupon(Base):
 
-    __tablename__ = 'coupons'
+#     __tablename__ = 'coupons'
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    code: Mapped[str] = mapped_column(String)
-    discount: Mapped[int] = mapped_column(Integer)
-    expiration_date: Mapped[datetime] = mapped_column(DateTime)
-    is_used: Mapped[bool] = mapped_column(Boolean)
-    user_id: Mapped[int] = mapped_column(Integer, ForeignKey('users.id'))
+#     id: Mapped[int] = mapped_column(Integer, primary_key=True)
+#     code: Mapped[str] = mapped_column(String)
+#     discount: Mapped[int] = mapped_column(Integer)
+#     expiration_date: Mapped[datetime] = mapped_column(DateTime)
+#     is_used: Mapped[bool] = mapped_column(Boolean)
+#     user_id: Mapped[int] = mapped_column(Integer, ForeignKey('users.id'))
 
-    user = relationship('User', back_populates='coupons')
+#     user = relationship('User', back_populates='coupons')

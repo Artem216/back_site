@@ -6,7 +6,7 @@ from datetime import datetime
 from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
-from src.db.models import DealType
+# from src.db.models import DealType
 
 
 class InstrumentBase(BaseModel):

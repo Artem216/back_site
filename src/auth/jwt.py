@@ -1,12 +1,14 @@
 from datetime import timedelta, datetime
-from uuid import UUID
+
+
+# from int import int
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 from .exceptions import CredentialException
 from config.settings import settings
-from src.utils.logger import conf_logger
-logger = conf_logger(__name__, "D")
+# from src.utils.logger import conf_logger
+# logger = conf_logger(__name__, "D")
 
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
@@ -23,7 +25,7 @@ def get_password_hash(password: str) -> str:
     return hashed_password
 
 
-def create_access_jwt(user_id: UUID, expires_delta: timedelta | None = None) -> str:
+def create_access_jwt(user_id: int, expires_delta: timedelta | None = None) -> str:
     """Creating access JWT token Creating access JWT token for user with id"""
     to_encode = {"sub": str(user_id)}
     if expires_delta:
@@ -39,7 +41,8 @@ def create_access_jwt(user_id: UUID, expires_delta: timedelta | None = None) -> 
     return encoded_jwt
 
 
-def decode_jwt(token: str | None = None) -> UUID | None:
+
+def decode_jwt(token: str | None = None) -> int | None:
     if token is None:
         raise CredentialException
     try:
@@ -51,7 +54,8 @@ def decode_jwt(token: str | None = None) -> UUID | None:
 
         if user_id is None:
             raise CredentialException
-        return UUID(user_id)
+            
+        return int(user_id)
     except JWTError:
-        logger.debug("JWTError")
+        # logger.debug("JWTError")
         raise CredentialException
