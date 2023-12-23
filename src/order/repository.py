@@ -6,6 +6,11 @@ from src.utils.logger import get_logger
 from src.order.model import Order, OrderDetails
 from src.order.domains import OrderCreate
 
+from datetime import datetime
+
+from src.cart.model import CartItem
+
+import json
 
 class OrderRepository(AbstractRepository):
     instance = None
@@ -26,19 +31,20 @@ class OrderRepository(AbstractRepository):
     def add(
             self,
             user_id: int,
-            order_data: list[OrderCreate],
+            items: list[CartItem],
     ) -> int:
-        orders: list[Order] = []
-        for order in order_data:
-            order_db = Order(**order.model_dump(exclude={"details"}))
-            order_db.user_id = user_id
-            for detail in order.details:
-                order_db.details.append(OrderDetails(**detail.model_dump()))
-            orders.append(order_db)
-        self.db.session.add_all(orders)
+        
+        order_db: Order = Order(user_id= user_id, date= datetime.now())
+        for item in items:
+            order_db.details.append(OrderDetails(
+                order_id= order_db.id,
+                product_id= item.product_id,
+                quantity= item.quantity
+            ))
+        self.db.session.add(order_db)
         self.db.session.commit()
 
-        return len(orders)
+        return 0
     
     def get(self, order_id: int | None = None) -> Order | None:
         if order_id:
@@ -69,4 +75,4 @@ class OrderRepository(AbstractRepository):
         return self.db.session.query(Order).filter(Order.user_id == user_id).all()
     
     def get_order_details(self, order_id: int) -> list[OrderDetails]:
-        return self.db.query(OrderDetails).filter(OrderDetails.order_id == order_id).all()
+        return self.db.session.query(OrderDetails).filter(OrderDetails.order_id == order_id).all()

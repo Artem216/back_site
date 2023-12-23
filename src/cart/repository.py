@@ -26,6 +26,10 @@ class CartRepository(AbstractRepository):
         return self.db.session.query(Cart).filter(Cart.user_id == user_id).first()
 
     def delete(self, cart: Cart) -> None:
+
+        items = self.db.session.query(CartItem).filter(CartItem.cart_id == cart.id).all()
+        for item in items:
+            self.db.session.delete(item)
         self.db.session.delete(cart)
         self.db.session.commit()
 
