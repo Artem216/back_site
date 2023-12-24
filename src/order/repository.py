@@ -10,8 +10,6 @@ from datetime import datetime
 
 from src.cart.model import CartItem
 
-import json
-
 class OrderRepository(AbstractRepository):
     instance = None
 
@@ -32,19 +30,23 @@ class OrderRepository(AbstractRepository):
             self,
             user_id: int,
             items: list[CartItem],
-    ) -> int:
+            total_price: float
+    ) -> Order:
         
-        order_db: Order = Order(user_id= user_id, date= datetime.now())
+        order_db: Order = Order(user_id= user_id, date= datetime.now(),price= total_price)
+        total_price = 0
         for item in items:
+            total_price += item.price 
             order_db.details.append(OrderDetails(
                 order_id= order_db.id,
                 product_id= item.product_id,
                 quantity= item.quantity
             ))
+        order_db.price = total_price
         self.db.session.add(order_db)
         self.db.session.commit()
 
-        return 0
+        return order_db
     
     def get(self, order_id: int | None = None) -> Order | None:
         if order_id:

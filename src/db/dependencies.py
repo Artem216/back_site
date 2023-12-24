@@ -5,6 +5,7 @@ from src.user.domain import UserDto
 from src.user.repository import UserRepository
 from src.order.repository import OrderRepository
 from src.cart.repository import CartRepository
+from src.coupons.repository import CouponRepository 
 # from src.utils.logger import conf_logger
 
 # logger = conf_logger(__name__)
@@ -25,6 +26,9 @@ async def get_order_repository(db: SQLManager = Depends(get_db)) -> OrderReposit
 async def get_cart_repository(db: SQLManager = Depends(get_db)) -> CartRepository:
     return CartRepository(db)
 
+async def get_coupon_repository(db: SQLManager = Depends(get_db)) -> CartRepository:
+    return CouponRepository(db)
+
 
 async def get_current_user(
     access_token: str | None = Depends(oauth2_scheme),
@@ -36,5 +40,5 @@ async def get_current_user(
             detail="Not authenticated (current_user)",
         )
     user_id = decode_jwt(access_token)
+    print(user_repository.get(user_id=user_id).role)
     return UserDto.model_validate(user_repository.get(user_id=user_id))
-

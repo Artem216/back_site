@@ -38,7 +38,8 @@ def add_item_to_cart(
     for item in items:
         cart.items.append(CartItem(**item.model_dump()))
         cart.total_items += item.quantity
-    
+        cart.total_price += item.price
+
     repository.update(cart)
     
     return cart

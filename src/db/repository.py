@@ -22,6 +22,3 @@ class AbstractRepository(ABC):
     @abstractmethod
     def get_all(self, **kwargs) -> list:
         ...
-    # @abstractmethod
-    # def get_items(self, **kwargs) -> list:
-    #     ...

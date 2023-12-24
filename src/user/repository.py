@@ -5,7 +5,7 @@ from sqlalchemy import select
 from src.auth.domain import Signup
 from src.db.models import User
 from src.db.repository import AbstractRepository
-from src.db.schemas import Deal as DealSchema
+
 from src.db.sql import SQLManager
 # from src.utils.logger import conf_logger as logger
 

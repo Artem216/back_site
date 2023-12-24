@@ -1,4 +1,4 @@
-from sqlalchemy import DECIMAL, UUID, Boolean, DateTime, Enum, ForeignKey, Integer, String
+from sqlalchemy import DECIMAL, UUID, Boolean, DateTime, Enum, ForeignKey, Integer, String, Float
 from sqlalchemy.orm import Mapped, declarative_base, mapped_column, relationship
 from sqlalchemy.sql import expression, func
 from datetime import datetime
@@ -31,6 +31,8 @@ class Order(Base):
     user_id: Mapped[int] = mapped_column(Integer, ForeignKey('users.id'))
     date: Mapped[datetime] = mapped_column(DateTime)
     status: Mapped[str] = mapped_column(Enum(OrderStatus), default=OrderStatus.in_process)
+    price: Mapped[float] = mapped_column(Float, default=0)
+
 
     details = relationship(
         'OrderDetails',

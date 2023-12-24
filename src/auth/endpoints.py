@@ -10,9 +10,6 @@ from .jwt import create_access_jwt, get_password_hash, verify_password
 router = APIRouter(prefix="", tags=["auth"])
 
 
-# logger = logger(__name__)
-
-
 @router.post("/signup", response_model=AccessToken, status_code=status.HTTP_201_CREATED)
 async def signup(
     signup_data: Signup,
@@ -32,7 +29,7 @@ async def login(
     login_data: OAuth2PasswordRequestForm = Depends(),
     repository: UserRepository = Depends(get_user_repository),
 ) -> AccessToken:
-    # logger.debug("logging attempt %s", login_data.username)
+    # logger.debug("loggingx attempt %s", login_data.username)
     user = repository.get(email=login_data.username)
     if not user:
         # logger.debug("User with this email does not exist")

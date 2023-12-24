@@ -8,7 +8,6 @@ from sqlalchemy.orm import sessionmaker
 
 from config.settings import settings
 from src.db.models import Base
-# from src.utils.logger import conf_logger as logger
 
 
 class SQLManager:
@@ -27,9 +26,7 @@ class SQLManager:
         while not connected:
             try:
                 self._connect()
-                # self.log.debug("Database connected")
             except (sqlalchemyOpError, psycopg2OpError):
-                # self.log.warning("Database connection failed, retrying...")
                 sleep(2)
             else:
                 connected = True
