@@ -12,15 +12,15 @@ services:
       - db
     ports:
       - "9999:9999"
-  #   db:
-  #     image: postgres:15
-  #     env_file:
-  #       - ./config/.env
-  #     restart: always
-  #     volumes:
-  #       - ./db_data/data:/var/lib/postgresql/data
-  #     ports:
-  #       - "5434:5432"
+  db:
+    image: postgres:15
+    env_file:
+      - ./config/.env
+    restart: always
+    volumes:
+      - ./db_data/data:/var/lib/postgresql/data
+    ports:
+      - "5434:5432"
   test_db:
     image: postgres:15
     env_file:
